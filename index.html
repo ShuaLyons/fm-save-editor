@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-amXqHFBYCeg4ISEJlhyoTBGcQQxgYR7oslFJb3YzV20='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forbidden Memories Save Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -543,6 +545,8 @@ const pad = (n, w = 3) => String(n).padStart(w, "0");
 async function loadFile(file) {
   $("insert-msg").textContent = "";
   try {
+    // A memory card is 128 KB; refuse anything far bigger before reading it into memory.
+    if (file.size > 4 * 1024 * 1024) throw new Error(`This file is too big to be a PS1 memory card (${(file.size / 1048576).toFixed(1)} MB). Memory cards are 128 KB.`);
     const card = parseMemoryCard(await file.arrayBuffer());
     if (!card.saves.length) throw new Error("There are no saves on this memory card.");
     st.card = card; st.fileName = file.name; st.dirty = false;
@@ -776,9 +780,20 @@ $("search").oninput = renderTrunk;
 $("sort").onchange = renderTrunk;
 $("owned").onchange = renderTrunk;
 $("sort-deck").onclick = () => { if (!st.save) return; st.deck.sort((a, b) => (a || 9999) - (b || 9999)); deckWrite(); markDirty(); renderDeck(); };
-$("chips").onchange = () => { if (!st.save) return; chipsSet(+$("chips").value); $("chips").value = chipsGet(); markDirty(); };
+$("chips").onchange = () => {
+  if (!st.save) return;
+  const raw = $("chips").value.trim(), n = Number(raw);
+  // A blank or non-numeric box means "no change", not "zero starchips".
+  if (raw === "" || !Number.isFinite(n)) { $("chips").value = chipsGet(); return; }
+  const before = chipsGet();
+  chipsSet(Math.floor(n));
+  $("chips").value = chipsGet();
+  if (chipsGet() !== before) markDirty();
+};
 $("save").onclick = saveAll;
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("dlg-back").classList.contains("on")) $("dlg-no").click(); });
+// Warn before closing or reloading the page with unsaved edits.
+window.addEventListener("beforeunload", e => { if (st.dirty) { e.preventDefault(); e.returnValue = ""; } });
 setEditable(false);
 </script>
 </body>
