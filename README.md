@@ -1,5 +1,3 @@
-# fm-save-editor
-
 # Forbidden Memories Save Editor
 
 A save editor for **Yu-Gi-Oh! Forbidden Memories** (PlayStation, US version) that runs entirely in your web browser. Change your deck, the cards in your trunk, and your starchips, then load the edited save in your emulator.
@@ -7,6 +5,8 @@ A save editor for **Yu-Gi-Oh! Forbidden Memories** (PlayStation, US version) tha
 **Use it here:** https://shualyons.github.io/fm-save-editor/
 
 Nothing to install, and your save never leaves your computer.
+
+![The editor with a save loaded: trunk on the left, deck on the right, card details below](screenshots/editor.jpg)
 
 ## Features
 
@@ -16,6 +16,12 @@ Nothing to install, and your save never leaves your computer.
 - **Card search and sorting** by name, number, ATK, DEF or type, with an "owned only" filter.
 - **Deck check:** warns about anything the game would refuse, such as empty slots or more than 3 copies of a card (or more than 1 of each Exodia piece).
 - **Styled after the game's own menus.**
+
+## Screenshots
+
+| Opening a memory card | Confirming a save | On a phone |
+| --- | --- | --- |
+| ![Start screen asking for a memory card file](screenshots/start.jpg) | ![The save confirmation dialog](screenshots/save-dialog.jpg) | ![The editor on a phone-sized screen](screenshots/mobile.jpg) |
 
 ## How to use
 
