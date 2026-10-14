@@ -1,0 +1,11 @@
+# Memory card files: keep your own saves private
+*.mcr
+*.mcd
+*.mc
+*.srm
+*.gme
+*.bak
+
+# System clutter
+.DS_Store
+Thumbs.db
