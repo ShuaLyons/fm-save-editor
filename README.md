@@ -43,9 +43,19 @@ Nothing to install, and your save never leaves your computer.
 
 Most raw 128 KB PS1 memory card images should work.
 
+## Use it offline
+
+The whole editor is a single file, so it works without an internet connection:
+
+1. In this repository, click **index.html**, then the **Download raw file** button (the downward arrow near the top right of the file view).
+2. Save it somewhere easy to find, such as your desktop. You can rename it, for example to `fm-save-editor.html`.
+3. Double-click it to open it in your browser. Everything works the same as the website: opening, editing and saving.
+
+The fonts are built into the file, so it looks the same offline too. Download the file again whenever there's an update.
+
 ## Is it safe?
 
-- **Your file stays on your computer.** Everything happens in your browser, and nothing is uploaded anywhere.
+- **Your file stays on your computer.** Everything happens in your browser. Nothing is uploaded, and the page doesn't load anything from other websites.
 - **The game checks its own saves.** Forbidden Memories protects its save data with a checksum and refuses saves that don't match. The editor recalculates this exactly as the game does, so edited saves load normally. This has been tested in DuckStation.
 - **It won't touch saves it doesn't recognise.** If a save doesn't pass the game's check when you open it, the editor refuses to edit it.
 
@@ -73,6 +83,7 @@ Three regions of the block are sealed with a CRC-16 and a run of pseudo-random w
 
 - Save format and integrity check: [ygofm-decomp](https://github.com/MaChInEgUn3/ygofm-decomp), a decompilation of the game.
 - Card names and stats: [YGO-FM-FusionCalc](https://github.com/Solumin/YGO-FM-FusionCalc).
+- Fonts: [Cinzel](https://github.com/NDISCOVER/Cinzel) and [Spectral](https://github.com/productiontype/Spectral), both under the SIL Open Font License 1.1.
 
 ## Disclaimer
 
