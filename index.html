@@ -67,7 +67,21 @@ body {
 .wrap { max-width: 1180px; margin: 0 auto; padding: 18px 16px 28px; }
 
 /* title */
-.title { text-align: center; margin: 10px 0 20px; }
+.title { text-align: center; margin: 10px 0 20px; position: relative; }
+/* github link, top right */
+.gh {
+  position: absolute; top: 0; right: 0;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: 1px;
+  color: var(--text); text-decoration: none; text-shadow: var(--outline);
+  background-color: #1e1a17;
+  background-image: var(--noise), linear-gradient(180deg, #3d362f, #1d1916);
+  border: 2px solid #0b0907;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.6);
+  padding: 7px 12px;
+}
+.gh svg { width: 18px; height: 18px; filter: drop-shadow(1px 1px 0 #000); }
+.gh:hover, .gh:focus-visible { color: var(--select); border-color: var(--frame); outline: none; }
 .title h1 {
   margin: 0;
   font-family: var(--display);
@@ -322,6 +336,7 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
 .credits a:hover, .credits a:focus-visible { color: var(--select); }
 
 @media (max-width: 820px) {
+  .gh { position: static; margin-bottom: 12px; }
   .board, .topbar { grid-template-columns: 1fr; }
   .list { height: 46vh; }
   .detail { grid-template-columns: auto 1fr; }
@@ -332,6 +347,10 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
 <body>
 <div class="wrap">
   <header class="title">
+    <a class="gh" href="https://github.com/shualyons/fm-save-editor" target="_blank" rel="noopener" title="View the source code on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>shualyons</span>
+    </a>
     <h1>Forbidden Memories</h1>
     <p>Save editor for the PlayStation game (US version)</p>
   </header>
@@ -425,6 +444,7 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
   </section>
 
   <footer class="credits">
+    <p>Made by <a href="https://github.com/shualyons" target="_blank" rel="noopener">shualyons</a>. Source code on <a href="https://github.com/shualyons/fm-save-editor" target="_blank" rel="noopener">GitHub</a>.</p>
     <p>An unofficial fan-made tool. Not affiliated with or endorsed by Konami. Yu-Gi-Oh! is a trademark of Konami.</p>
     <p>Credits: save format and integrity check from <a href="https://github.com/MaChInEgUn3/ygofm-decomp" target="_blank" rel="noopener">ygofm-decomp</a>. Card names and stats from <a href="https://github.com/Solumin/YGO-FM-FusionCalc" target="_blank" rel="noopener">YGO-FM-FusionCalc</a>. Fonts: Cinzel and Spectral (SIL Open Font License).</p>
   </footer>
