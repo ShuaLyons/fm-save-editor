@@ -97,3 +97,7 @@ This is an unofficial fan-made tool. It is not affiliated with or endorsed by Ko
 ## License
 
 The editor's code is released under the [MIT License](LICENSE). The license covers this project's code only, not the card data or anything belonging to Konami.
+
+## AI disclosure
+
+This project was built with AI assistance. I decided what to build, pointed it to the research it used, chose the design, and tested the editor on real saves in DuckStation before releasing it.
