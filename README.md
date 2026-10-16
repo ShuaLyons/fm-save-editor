@@ -12,16 +12,21 @@ Nothing to install, and your save never leaves your computer.
 
 - **Deck editing:** put any of the game's 722 cards into any of your 40 deck slots.
 - **Trunk editing:** set how many copies of each card you own.
-- **Starchips:** set your starchip total (up to 999,999).
+- **Starchips:** set your total, or max it out with one click.
+- **Card info:** ATK/DEF, type and level, plus each card's password and starchip cost (and whether you can afford it).
+- **Deck stats:** monster, magic and trap counts, average ATK and DEF, and a breakdown by type.
+- **Deck import and export:** copy your deck as text to keep or share it, and paste one back in. Card numbers, names and "3x Card Name" all work.
+- **Undo and reset:** undo any change (Ctrl+Z), or put everything back to how it was when you opened the save.
+- **Bulk actions:** give yourself 1 or 3 of every card in one go.
 - **Card search and sorting** by name, number, ATK, DEF or type, with an "owned only" filter.
 - **Deck check:** warns about anything the game would refuse, such as empty slots or more than 3 copies of a card (or more than 1 of each Exodia piece).
 - **Styled after the game's own menus.**
 
 ## Screenshots
 
-| Opening a memory card | Confirming a save | On a phone |
-| --- | --- | --- |
-| ![Start screen asking for a memory card file](screenshots/start.jpg) | ![The save confirmation dialog](screenshots/save-dialog.jpg) | ![The editor on a phone-sized screen](screenshots/mobile.jpg) |
+| Opening a memory card | Exporting a deck | Confirming a save | On a phone |
+| --- | --- | --- | --- |
+| ![Start screen asking for a memory card file](screenshots/start.jpg) | ![The export deck popup with the deck as text](screenshots/export.jpg) | ![The save confirmation popup](screenshots/save-dialog.jpg) | ![The editor on a phone-sized screen](screenshots/mobile.jpg) |
 
 ## How to use
 

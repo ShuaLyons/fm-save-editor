@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-A0neTqKGhHRi8mIkyszdlXteFW4lUDtIkJ7jTbZWk3k='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nPFov33XWSTQmTwWpg+J9L8TxGp/PHiZF8vJMbYfBp4='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forbidden Memories Save Editor</title>
@@ -245,6 +245,23 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
 .row .own.zero { color: #6f695e; }
 .row.empty .name { color: var(--danger); font-style: italic; }
 
+#deck { height: 372px; }
+.stats { margin-top: 10px; font-size: 16px; color: var(--dim); text-shadow: var(--outline); }
+.stats .counts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.stats b { color: var(--gold); font-family: var(--display); font-weight: 700; }
+.stats .types { margin-top: 4px; }
+textarea {
+  width: 100%; min-height: 220px; resize: vertical;
+  font-family: var(--body); font-size: 17px; line-height: 1.35;
+  color: var(--text); background: #12100e;
+  border: 1px solid var(--rule); box-shadow: inset 1px 1px 3px rgba(0,0,0,0.8);
+  padding: 8px; margin: 4px 0 10px;
+}
+textarea:focus-visible { outline: 2px solid var(--frame); }
+.dlg .msg { min-height: 1.3em; color: var(--danger); margin: 0 0 10px; }
+.dlg .btns { flex-wrap: wrap; }
+.savebtns { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
 /* card info panel */
 .detail { margin-top: 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; }
 .cardface {
@@ -266,6 +283,10 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
 .info h2 { margin: 0 0 4px; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: 1px; color: var(--select); text-shadow: var(--outline); }
 .info .meta { color: var(--dim); text-shadow: var(--outline); }
 .info .atk { color: var(--gold); font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: 1px; text-shadow: var(--outline); margin-top: 4px; }
+.info .buy { color: var(--dim); font-size: 16px; margin-top: 4px; text-shadow: var(--outline); }
+.info .buy b { color: var(--text); font-weight: 600; }
+.info .buy .yes { color: var(--ok); }
+.info .buy .no { color: var(--danger); }
 .actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
 .trunk-ctl { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 .trunk-ctl span { min-width: 3ch; text-align: center; font-family: var(--display); font-weight: 700; font-size: 24px; color: var(--gold); text-shadow: var(--outline); }
@@ -339,6 +360,7 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
         <svg class="star" viewBox="0 0 16 16" aria-hidden="true"><path fill="#f6d46b" stroke="#6b3b00" stroke-width="1" d="M8 1l2 4.5 5 .5-3.8 3.3 1.1 4.9L8 11.7 3.7 14.2l1.1-4.9L1 6l5-.5z"/></svg>
         <label class="label" for="chips">Starchips</label>
         <input type="number" id="chips" min="0" max="999999" step="1" inputmode="numeric">
+        <button class="btn small" id="chips-max" title="Set starchips to 999,999">Max</button>
       </div>
     </div>
 
@@ -355,16 +377,19 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
             <option value="type">By type</option>
           </select>
           <label class="check"><input type="checkbox" id="owned"> Owned only</label>
+          <button class="btn small" id="bulk">Bulk</button>
         </div>
         <ul class="list" id="trunk" aria-label="All cards"></ul>
       </div>
       <div class="win">
         <div class="win-title"><span>Deck</span><span class="count" id="deck-count"></span></div>
         <div class="tools">
-          <button class="btn small" id="sort-deck">Sort deck</button>
-          <span class="hint" style="color:var(--dim);font-size:20px">Pick a slot, then a card.</span>
+          <button class="btn small" id="sort-deck">Sort</button>
+          <button class="btn small" id="import">Import</button>
+          <button class="btn small" id="export">Export</button>
         </div>
         <ul class="list" id="deck" aria-label="Deck slots"></ul>
+        <div class="stats" id="stats" aria-live="polite"></div>
       </div>
     </div>
 
@@ -374,6 +399,7 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
         <h2 id="d-name">No card selected</h2>
         <div class="meta" id="d-meta">Click a card in the trunk to see it here.</div>
         <div class="atk" id="d-atk"></div>
+        <div class="buy" id="d-buy"></div>
       </div>
       <div class="actions">
         <div class="trunk-ctl">
@@ -388,7 +414,11 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
 
     <div class="savebar">
       <div id="status" role="status"></div>
-      <button class="btn gold" id="save">Save changes</button>
+      <div class="savebtns">
+        <button class="btn small" id="undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button class="btn small" id="reset">Reset</button>
+        <button class="btn gold" id="save">Save changes</button>
+      </div>
     </div>
 
     <p class="how"><b>After saving:</b> close your emulator and put the saved memory card file in place of your old one (if it downloaded as a zip, unzip it first). Keep your old file somewhere safe as a backup.</p>
@@ -404,17 +434,14 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--frame); }
   <div class="win dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
     <div class="win-title" id="dlg-title">Save?</div>
     <div id="dlg-body"></div>
-    <div class="btns">
-      <button class="btn gold" id="dlg-yes">Yes</button>
-      <button class="btn" id="dlg-no">No</button>
-    </div>
+    <div class="btns" id="dlg-btns"></div>
   </div>
 </div>
 
 <script>
 "use strict";
-// [id, name, atk, def, type, level]
-const CARDS = [[1,"Blue-eyes White Dragon",3000,2500,0,8],[2,"Mystical Elf",800,2000,1,4],[3,"Hitotsu-me Giant",1200,1000,4,4],[4,"Baby Dragon",1200,700,0,3],[5,"Ryu-kishin",1000,500,7,3],[6,"Feral Imp",1300,1400,7,4],[7,"Winged Dragon #1",1400,1200,0,4],[8,"Mushroom Man",800,600,19,2],[9,"Shadow Specter",500,200,2,1],[10,"Blackland Fire Dragon",1500,800,0,4],[11,"Sword Arm of Dragon",1750,2030,10,6],[12,"Swamp Battleguard",1800,1500,3,5],[13,"Tyhone",1200,1400,6,4],[14,"Battle Steer",1800,1300,4,5],[15,"Flame Swordsman",1800,1600,3,5],[16,"Time Wizard",500,400,1,2],[17,"Right Leg of the Forbidden One",200,300,1,1],[18,"Left Leg of the Forbidden One",200,300,1,1],[19,"Right Arm of the Forbidden One",200,300,1,1],[20,"Left Arm of the Forbidden One",200,300,1,1],[21,"Exodia the Forbidden",1000,1000,1,3],[22,"Summoned Skull",2500,1200,7,6],[23,"The Wicked Worm Beast",1400,700,5,3],[24,"Skull Servant",300,200,2,1],[25,"Horn Imp",1300,1000,7,4],[26,"Battle Ox",1700,1000,4,4],[27,"Beaver Warrior",1200,1500,4,4],[28,"Rock Ogre Grotto #1",800,1200,18,3],[29,"Mountain Warrior",600,1000,4,3],[30,"Zombie Warrior",1200,900,2,3],[31,"Koumori Dragon",1500,1200,0,4],[32,"Two-headed King Rex",1600,1200,10,4],[33,"Judge Man",2200,1500,3,6],[34,"Saggi the Dark Clown",600,1500,1,3],[35,"Dark Magician",2500,2100,1,7],[36,"The Snake Hair",1500,1200,2,4],[37,"Gaia the Dragon Champion",2600,2100,0,7],[38,"Gaia the Fierce Knight",2300,2100,3,7],[39,"Curse of Dragon",2000,1500,0,5],[40,"Dragon Piper",200,1800,17,3],[41,"Celtic Guardian",1400,1200,3,4],[42,"Illusionist Faceless Mage",1200,2200,1,5],[43,"Karbonala Warrior",1500,1200,3,4],[44,"Rogue Doll",1600,1000,1,4],[45,"Oscillo Hero #2",1000,500,15,3],[46,"Griffore",1200,1500,5,4],[47,"Torike",1200,600,5,3],[48,"Sangan",1000,600,7,3],[49,"Big Insect",1200,1500,9,4],[50,"Basic Insect",500,700,9,2],[51,"Armored Lizard",1500,1200,11,4],[52,"Hercules Beetle",1500,2000,9,5],[53,"Killer Needle",1200,1000,9,4],[54,"Gokibore",1200,1400,9,4],[55,"Giant Flea",1500,1200,9,4],[56,"Larvae Moth",500,400,9,2],[57,"Great Moth",2600,2500,9,8],[58,"Kuriboh",300,200,7,1],[59,"Mammoth Graveyard",1200,800,10,3],[60,"Great White",1600,800,12,4],[61,"Wolf",1200,800,5,3],[62,"Harpie Lady",1300,1400,6,4],[63,"Harpie Lady Sisters",1950,2100,6,6],[64,"Tiger Axe",1300,1100,4,4],[65,"Silver Fang",1200,800,5,3],[66,"Kojikocy",1500,1200,3,4],[67,"Perfectly Ultimate Great Moth",3500,3000,9,8],[68,"Garoozis",1800,1500,4,5],[69,"Thousand Dragon",2400,2000,0,7],[70,"Fiend Kraken",1200,1400,16,4],[71,"Jellyfish",1200,1500,16,4],[72,"Cocoon of Evolution",0,2000,9,3],[73,"Kairyu-shin",1800,1500,13,5],[74,"Giant Soldier of Stone",1300,2000,18,3],[75,"Man-eating Plant",800,600,19,2],[76,"Krokodilus",1100,1200,11,4],[77,"Grappler",1300,1200,11,4],[78,"Axe Raider",1700,1150,3,4],[79,"Megazowler",1800,2000,10,6],[80,"Uraby",1500,800,10,4],[81,"Crawling Dragon #2",1600,1200,10,4],[82,"Red-eyes B. Dragon",2400,2000,0,7],[83,"Castle of Dark Illusions",920,1930,7,4],[84,"Reaper of the Cards",1380,1930,7,5],[85,"King of Yamimakai",2000,1530,7,5],[86,"Barox",1380,1530,7,5],[87,"Dark Chimera",1610,1460,7,5],[88,"Metal Guardian",1150,2150,7,5],[89,"Catapult Turtle",1000,2000,16,5],[90,"Gyakutenno Megami",1800,2000,8,6],[91,"Mystic Horseman",1300,1550,5,4],[92,"Rabid Horseman",2000,1700,4,6],[93,"Zanki",1500,1700,3,5],[94,"Crawling Dragon",1600,1400,0,5],[95,"Crass Clown",1350,1400,7,4],[96,"Armored Zombie",1500,0,2,3],[97,"Dragon Zombie",1600,0,2,3],[98,"Clown Zombie",1350,0,2,2],[99,"Pumpking the King of Ghosts",1800,2000,2,6],[100,"Battle Warrior",700,1000,3,3],[101,"Wings of Wicked Flame",700,600,17,2],[102,"Mask of Darkness",900,400,7,2],[103,"Job-change Mirror",800,1300,7,3],[104,"Curtain of the Dark Ones",600,500,1,2],[105,"Tomozaurus",500,400,10,2],[106,"Spirit of the Winds",1700,1400,1,5],[107,"Kageningen",800,600,3,2],[108,"Graveyard and the Hand of Invitation",700,900,2,3],[109,"Goddess with the Third Eye",1200,1000,8,4],[110,"Hero of the East",1100,1000,3,3],[111,"Doma The Angel of Silence",1600,1400,8,5],[112,"That Which Feeds on Life",1200,1000,7,4],[113,"Dark Gray",800,900,5,3],[114,"White Magical Hat",1000,700,1,3],[115,"Kamion Wizard",1300,1100,1,4],[116,"Nightmare Scorpion",900,800,9,3],[117,"Spirit of the Books",1400,1200,6,4],[118,"Supporter in the Shadows",1000,1000,3,3],[119,"Trial of Nightmares",1300,900,7,4],[120,"Dream Clown",1200,900,3,3],[121,"Sleeping Lion",700,1700,5,4],[122,"Yamatano Dragon Scroll",900,300,0,2],[123,"Dark Plant",300,400,19,1],[124,"Ancient Tool",1700,1400,14,5],[125,"Faith Bird",1500,1100,6,4],[126,"Orion the Battle King",1800,1500,8,5],[127,"Ansatsu",1700,1200,3,5],[128,"LaMoon",1200,1700,1,5],[129,"Nemuriko",800,700,1,3],[130,"Weather Control",600,400,8,2],[131,"Octoberser",1600,1400,16,5],[132,"The 13th Grave",1200,900,2,3],[133,"Charubin the Fire Knight",1100,800,17,3],[134,"Mystical Capture Chain",700,700,8,2],[135,"Fiend's Hand",600,600,2,2],[136,"Witty Phantom",1400,1300,7,4],[137,"Mystery Hand",500,500,7,2],[138,"Dragon Statue",1100,900,3,3],[139,"Blue-eyed Silver Zombie",900,700,2,3],[140,"Toad Master",1000,1000,16,3],[141,"Spiked Snail",700,1300,9,3],[142,"Flame Manipulator",900,1000,1,3],[143,"Necrolancer the Timelord",800,900,1,3],[144,"Djinn the Watcher of the Wind",700,900,1,3],[145,"The Bewitching Phantom Thief",700,700,1,2],[146,"Temple of Skulls",900,1300,2,4],[147,"Monster Egg",600,900,3,3],[148,"The Shadow Who Controls the Dark",800,700,7,3],[149,"Lord of the Lamp",1400,1200,7,4],[150,"Akihiron",1700,1400,16,5],[151,"Rhaimundos of the Red Sword",1200,1300,3,4],[152,"The Melting Red Shadow",500,700,16,2],[153,"Dokuroizo the Grim Reaper",900,1200,2,3],[154,"Fire Reaper",700,500,2,2],[155,"Larvas",800,1000,5,3],[156,"Hard Armor",300,1200,3,3],[157,"Firegrass",700,600,19,2],[158,"Man Eater",800,600,19,2],[159,"Dig Beak",500,800,5,2],[160,"M-warrior #1",1000,500,3,3],[161,"M-warrior #2",500,1000,3,3],[162,"Tainted Wisdom",1250,800,7,3],[163,"Lisark",1300,1300,5,4],[164,"Lord of Zemia",1300,1000,7,4],[165,"The Judgement Hand",1400,700,3,3],[166,"Mysterious Puppeteer",1000,1500,3,4],[167,"Ancient Jar",400,200,18,1],[168,"Darkfire Dragon",1500,1250,0,4],[169,"Dark King of the Abyss",1200,800,7,3],[170,"Spirit of the Harp",800,2000,8,4],[171,"Big Eye",1200,1000,7,4],[172,"Armaill",700,1300,3,3],[173,"Dark Prisoner",600,1000,7,3],[174,"Hurricail",900,200,1,2],[175,"Ancient Brain",1000,700,7,3],[176,"Fire Eye",800,600,17,2],[177,"Monsturtle",800,1000,16,3],[178,"Claw Reacher",1000,800,7,3],[179,"Phantom Dewan",700,600,1,2],[180,"Arlownay",800,1000,19,3],[181,"Dark Shade",1000,1000,7,3],[182,"Masked Clown",500,700,3,2],[183,"Lucky Trinket",600,800,1,2],[184,"Genin",600,900,1,3],[185,"Eyearmor",600,500,3,2],[186,"Fiend Refrection #2",1100,1400,6,4],[187,"Gate Deeg",700,800,5,3],[188,"Synchar",800,900,5,3],[189,"Fusionist",900,700,5,3],[190,"Akakieisu",1000,800,1,3],[191,"LaLa Li-oon",600,600,15,2],[192,"Key Mace",400,300,8,1],[193,"Turtle Tiger",1000,1500,16,4],[194,"Terra the Terrible",1200,1300,7,4],[195,"Doron",900,500,3,2],[196,"Arma Knight",1000,1200,16,4],[197,"Mech Mole Zombie",500,400,2,2],[198,"Happy Lover",800,500,8,2],[199,"Penguin Knight",900,800,16,3],[200,"Petit Dragon",600,700,0,2],[201,"Frenzied Panda",1200,1000,5,4],[202,"Air Marmot of Nefariousness",400,600,5,2],[203,"Phantom Ghost",600,800,2,2],[204,"Mabarrel",1700,1400,7,5],[205,"Dorover",900,800,16,3],[206,"Twin Long Rods #1",900,700,16,3],[207,"Droll Bird",600,500,6,2],[208,"Petit Angel",600,900,8,3],[209,"Winged Cleaver",700,700,9,2],[210,"Hinotama Soul",600,500,17,2],[211,"Kaminarikozou",700,600,15,2],[212,"Meotoko",700,600,5,2],[213,"Aqua Madoor",1200,2000,1,4],[214,"Kagemusha of the Blue Flame",800,400,3,2],[215,"Flame Ghost",1000,800,2,3],[216,"Dryad",1200,1400,1,4],[217,"B. Skull Dragon",3200,2500,0,9],[218,"Two-mouth Darkruler",900,700,10,3],[219,"Solitude",1050,1000,4,3],[220,"Masked Sorcerer",900,1400,1,4],[221,"Kumootoko",700,1400,9,3],[222,"Midnight Fiend",800,600,7,2],[223,"Roaring Ocean Snake",2100,1800,16,6],[224,"Trap Master",500,1100,3,3],[225,"Fiend Sword",1400,800,3,4],[226,"Skull Stalker",900,800,3,3],[227,"Hitodenchak",600,700,16,2],[228,"Wood Remains",1000,900,2,3],[229,"Hourglass of Life",700,600,8,2],[230,"Rare Fish",1500,1200,12,4],[231,"Wood Clown",800,1200,3,3],[232,"Madjinn Gunn",600,800,7,2],[233,"Dark Titan of Terror",1300,1100,7,4],[234,"Beautiful Headhuntress",1600,800,3,4],[235,"Wodan the Resident of the Forest",900,1200,3,3],[236,"Guardian of the Labyrinth",1000,1200,3,4],[237,"Haniwa",500,500,18,2],[238,"Yashinoki",800,600,19,2],[239,"Vishwar Randi",900,700,3,3],[240,"The Drdek",700,800,7,3],[241,"Dark Assailant",1200,1200,2,4],[242,"Candle of Fate",600,600,7,2],[243,"Water Element",900,700,16,3],[244,"Dissolverock",900,1000,18,3],[245,"Meda Bat",800,400,7,2],[246,"One Who Hunts Souls",1100,1000,4,4],[247,"Root Water",900,800,12,3],[248,"Master & Expert",1200,1000,5,4],[249,"Water Omotics",1400,1200,16,4],[250,"Hyo",800,1200,3,3],[251,"Enchanting Mermaid",1200,900,12,3],[252,"Nekogal #1",1100,900,5,3],[253,"Angelwitch",800,1000,1,3],[254,"Embryonic Beast",500,750,7,2],[255,"Prevent Rat",500,2000,5,4],[256,"Dimensional Warrior",1200,1000,3,4],[257,"Stone Armadiller",800,1200,18,3],[258,"Beastking of the Swamps",1000,1100,16,4],[259,"Ancient Sorcerer",1000,1300,1,4],[260,"Lunar Queen Elzaim",750,1100,8,3],[261,"Wicked Mirror",700,600,7,2],[262,"The Little Swordsman of Aile",800,1300,3,3],[263,"Rock Ogre Grotto #2",700,1400,18,3],[264,"Wing Egg Elf",500,1300,8,3],[265,"The Furious Sea King",800,700,16,3],[266,"Princess of Tsurugi",900,700,3,3],[267,"Unknown Warrior of Fiend",1000,500,3,3],[268,"Sectarian of Secrets",700,500,1,2],[269,"Versago the Destroyer",1100,900,7,3],[270,"Wetha",1000,900,16,3],[271,"Megirus Light",900,600,7,3],[272,"Mavelus",1300,900,6,4],[273,"Ancient Tree of Enlightenment",600,1500,19,3],[274,"Green Phantom King",500,1600,19,3],[275,"Ground Attacker Bugroth",1500,1000,14,4],[276,"Ray & Temperature",1000,1000,8,3],[277,"Gorgon Egg",300,1300,7,3],[278,"Petit Moth",300,200,9,1],[279,"King Fog",1000,900,7,3],[280,"Protector of the Throne",800,1500,3,4],[281,"Mystic Clown",1500,1000,7,4],[282,"Mystical Sheep #2",800,1000,5,3],[283,"Holograh",1100,700,14,3],[284,"Tao the Chanter",1200,900,1,3],[285,"Serpent Marauder",700,600,11,2],[286,"Gatekeeper",1500,1800,14,5],[287,"Ogre of the Black Shadow",1200,1400,4,4],[288,"Dark Artist",600,1400,7,3],[289,"Change Slime",400,300,16,1],[290,"Moon Envoy",1100,1000,3,4],[291,"Fireyarou",1300,1000,17,4],[292,"Psychic Kappa",400,1000,16,2],[293,"Masaki the Legendary Swordsman",1100,1100,3,4],[294,"Dragoness the Wicked Knight",1200,900,3,3],[295,"Bio Plant",600,1300,7,3],[296,"One-eyed Shield Dragon",700,1300,0,3],[297,"Cyber Soldier of Darkworld",1400,1200,14,4],[298,"Wicked Dragon with the Ersatz Head",900,900,0,3],[299,"Sonic Maid",1200,900,3,3],[300,"Kurama",800,800,6,3],[301,"Legendary Sword",0,0,23,0],[302,"Sword of Dark Destruction",0,0,23,0],[303,"Dark Energy",0,0,23,0],[304,"Axe of Despair",0,0,23,0],[305,"Laser Cannon Armor",0,0,23,0],[306,"Insect Armor with Laser Cannon",0,0,23,0],[307,"Elf's Light",0,0,23,0],[308,"Beast Fangs",0,0,23,0],[309,"Steel Shell",0,0,23,0],[310,"Vile Germs",0,0,23,0],[311,"Black Pendant",0,0,23,0],[312,"Silver Bow and Arrow",0,0,23,0],[313,"Horn of Light",0,0,23,0],[314,"Horn of the Unicorn",0,0,23,0],[315,"Dragon Treasure",0,0,23,0],[316,"Electro-whip",0,0,23,0],[317,"Cyber Shield",0,0,23,0],[318,"Elegant Egotist",0,0,23,0],[319,"Mystical Moon",0,0,23,0],[320,"Stop Defense",0,0,20,0],[321,"Malevolent Nuzzler",0,0,23,0],[322,"Violet Crystal",0,0,23,0],[323,"Book of Secret Arts",0,0,23,0],[324,"Invigoration",0,0,23,0],[325,"Machine Conversion Factory",0,0,23,0],[326,"Raise Body Heat",0,0,23,0],[327,"Follow Wind",0,0,23,0],[328,"Power of Kaishin",0,0,23,0],[329,"Dragon Capture Jar",0,0,20,0],[330,"Forest",0,0,20,0],[331,"Wasteland",0,0,20,0],[332,"Mountain",0,0,20,0],[333,"Sogen",0,0,20,0],[334,"Umi",0,0,20,0],[335,"Yami",0,0,20,0],[336,"Dark Hole",0,0,20,0],[337,"Raigeki",0,0,20,0],[338,"Mooyan Curry",0,0,20,0],[339,"Red Medicine",0,0,20,0],[340,"Goblin's Secret Remedy",0,0,20,0],[341,"Soul of the Pure",0,0,20,0],[342,"Dian Keto the Cure Master",0,0,20,0],[343,"Sparks",0,0,20,0],[344,"Hinotama",0,0,20,0],[345,"Final Flame",0,0,20,0],[346,"Ookazi",0,0,20,0],[347,"Tremendous Fire",0,0,20,0],[348,"Swords of Revealing Light",0,0,20,0],[349,"Spellbinding Circle",0,0,20,0],[350,"Dark-piercing Light",0,0,20,0],[351,"Yaranzo",1300,1500,2,4],[352,"Kanan the Swordmistress",1400,1400,3,4],[353,"Takriminos",1500,1200,13,4],[354,"Stuffed Animal",1200,900,3,3],[355,"Megasonic Eye",1500,1800,14,5],[356,"Super War-lion",2300,2100,5,7],[357,"Yamadron",1600,1800,0,5],[358,"Seiyaryu",2500,2300,0,7],[359,"Three-legged Zombies",1100,800,2,3],[360,"Zera The Mant",2800,2300,7,8],[361,"Flying Penguin",1200,1000,16,4],[362,"Millennium Shield",0,3000,3,5],[363,"Fairy's Gift",1400,1000,1,4],[364,"Black Luster Soldier",3000,2500,3,8],[365,"Fiend's Mirror",2100,1800,7,6],[366,"Labyrinth Wall",0,3000,18,5],[367,"Jirai Gumo",2200,100,9,4],[368,"Shadow Ghoul",1600,1300,2,5],[369,"Wall Shadow",1600,3000,3,7],[370,"Labyrinth Tank",2400,2400,14,7],[371,"Sanga of the Thunder",2600,2200,15,7],[372,"Kazejin",2400,2200,1,7],[373,"Suijin",2500,2400,16,7],[374,"Gate Guardian",3750,3400,3,11],[375,"Dungeon Worm",1800,1500,9,5],[376,"Monster Tamer",1800,1600,3,5],[377,"Ryu-kishin Powered",1600,1200,7,4],[378,"Swordstalker",2000,1600,3,6],[379,"La Jinn the Mystical Genie",1800,1000,7,4],[380,"Blue-eyes Ultimate Dragon",4500,3800,0,12],[381,"Toon Alligator",800,1600,11,4],[382,"Rude Kaiser",1800,1600,4,5],[383,"Parrot Dragon",2000,1300,0,5],[384,"Dark Rabbit",1100,1500,5,4],[385,"Bickuribox",2300,2000,7,7],[386,"Harpie's Pet Dragon",2000,2500,0,7],[387,"Mystic Lamp",400,300,1,1],[388,"Pendulum Machine",1750,2000,14,6],[389,"Giltia the D. Knight",1850,1500,3,5],[390,"Launcher Spider",2200,2500,14,7],[391,"Zoa",2600,1900,7,7],[392,"Metalzoa",3000,2300,14,8],[393,"Zone Eater",250,200,16,1],[394,"Steel Scorpion",250,300,14,1],[395,"Dancing Elf",300,200,8,1],[396,"Ocubeam",1550,1650,8,5],[397,"Leghul",300,350,9,1],[398,"Ooguchi",300,250,16,1],[399,"Swordsman from a Foreign Land",250,250,3,1],[400,"Emperor of the Land and Sea",1800,1500,11,5],[401,"Ushi Oni",2150,1950,7,6],[402,"Monster Eye",250,350,7,1],[403,"Leogun",1750,1550,5,5],[404,"Tatsunootoshigo",1350,1600,5,5],[405,"Saber Slasher",1450,1500,14,5],[406,"Yaiba Robo",1000,1300,14,4],[407,"Machine King",2200,2000,14,6],[408,"Giant Mech-soldier",1750,1900,14,6],[409,"Metal Dragon",1850,1700,14,6],[410,"Mechanical Spider",400,500,14,2],[411,"Bat",300,350,14,1],[412,"Giga-tech Wolf",1200,1400,14,4],[413,"Cyber Soldier",1500,1700,14,5],[414,"Shovel Crusher",900,1200,14,3],[415,"Mechanicalchacer",1850,800,14,4],[416,"Blocker",850,1800,14,4],[417,"Blast Juggler",800,900,14,3],[418,"Golgoil",900,1600,14,4],[419,"Giganto",1700,1800,14,5],[420,"Cyber-Stein",700,500,14,2],[421,"Cyber Commander",750,700,14,2],[422,"Jinzo #7",500,400,14,2],[423,"Dice Armadillo",1650,1800,14,5],[424,"Sky Dragon",1900,1800,0,6],[425,"Thunder Dragon",1600,1500,15,5],[426,"Stone D.",2000,2300,18,7],[427,"Kaiser Dragon",2300,2000,0,7],[428,"Magician of Faith",300,400,1,1],[429,"Goddess of Whim",950,700,8,3],[430,"Water Magician",1400,1000,16,4],[431,"Ice Water",1150,900,16,3],[432,"Waterdragon Fairy",1100,700,16,3],[433,"Ancient Elf",1450,1200,1,4],[434,"Beautiful Beast Trainer",1750,1500,3,5],[435,"Water Girl",1250,1000,16,4],[436,"White Dolphin",500,400,12,2],[437,"Deepsea Shark",1900,1600,12,5],[438,"Metal Fish",1600,1900,14,5],[439,"Bottom Dweller",1650,1700,12,5],[440,"7 Colored Fish",1800,800,12,4],[441,"Mech Bass",1800,1500,14,5],[442,"Aqua Dragon",2250,1900,13,6],[443,"Sea King Dragon",2000,1700,13,6],[444,"Turu-Purun",450,500,16,2],[445,"Guardian of the Sea",1300,1000,16,4],[446,"Aqua Snake",1050,900,16,3],[447,"Giant Red Seasnake",1800,800,16,4],[448,"Spike Seadra",1600,1300,13,5],[449,"30,000-Year White Turtle",1250,2100,16,5],[450,"Kappa Avenger",1200,900,16,3],[451,"Kanikabuto",650,900,16,3],[452,"Zarigun",600,700,16,2],[453,"Millennium Golem",2000,2200,18,6],[454,"Destroyer Golem",1500,1000,18,4],[455,"Barrel Rock",1000,1300,18,4],[456,"Minomushi Warrior",1300,1200,18,4],[457,"Stone Ghost",1200,1000,18,4],[458,"Kaminari Attack",1900,1400,15,5],[459,"Tripwire Beast",1200,1300,15,4],[460,"Bolt Escargot",1400,1500,15,5],[461,"Bolt Penguin",1100,800,15,3],[462,"The Immortal of Thunder",1500,1300,15,4],[463,"Electric Snake",800,900,15,3],[464,"Wing Eagle",1800,1500,6,5],[465,"Punished Eagle",2100,1800,6,6],[466,"Skull Red Bird",1550,1200,6,4],[467,"Crimson Sunbird",2300,1800,6,6],[468,"Queen Bird",1200,2000,6,5],[469,"Armed Ninja",300,300,3,1],[470,"Magical Ghost",1300,1400,2,4],[471,"Soul Hunter",2200,1800,7,6],[472,"Air Eater",2100,1600,7,6],[473,"Vermillion Sparrow",1900,1500,17,5],[474,"Sea Kamen",1100,1300,16,4],[475,"Sinister Serpent",300,250,11,1],[476,"Ganigumo",600,800,9,2],[477,"Alinsection",950,700,9,3],[478,"Insect Soldiers of the Sky",1000,800,9,3],[479,"Cockroach Knight",800,900,9,3],[480,"Kuwagata a",1250,1000,9,4],[481,"Burglar",850,800,5,3],[482,"Pragtical",1900,1500,10,5],[483,"Garvas",2000,1700,5,6],[484,"Ameba",300,350,16,1],[485,"Korogashi",550,400,9,2],[486,"Boo Koo",650,500,1,2],[487,"Flower Wolf",1800,1400,5,5],[488,"Rainbow Flower",400,500,19,2],[489,"Barrel Lily",1100,600,19,3],[490,"Needle Ball",750,700,7,2],[491,"Peacock",1700,1500,6,5],[492,"Hoshiningen",500,700,8,2],[493,"Maha Vailo",1550,1400,1,5],[494,"Rainbow Marine Mermaid",1550,1700,12,5],[495,"Musician King",1750,1500,1,5],[496,"Wilmee",1000,1200,5,4],[497,"Yado Karu",900,1700,16,4],[498,"Morinphen",1550,1300,7,5],[499,"Kattapillar",250,300,9,1],[500,"Dragon Seeker",2000,2100,7,6],[501,"Man-eater Bug",450,600,9,2],[502,"D. Human",1300,1100,3,4],[503,"Turtle Raccoon",700,900,16,3],[504,"Fungi of the Musk",400,300,7,1],[505,"Prisman",800,1000,18,3],[506,"Gale Dogra",650,600,9,2],[507,"Crazy Fish",1600,1200,12,4],[508,"Cyber Saurus",1800,1400,14,5],[509,"Bracchio-raidus",2200,2000,10,6],[510,"Laughing Flower",900,500,19,2],[511,"Bean Soldier",1400,1300,19,4],[512,"Cannon Soldier",1400,1300,14,4],[513,"Guardian of the Throne Room",1650,1600,14,5],[514,"Brave Scizzar",1300,1000,14,4],[515,"The Statue of Easter Island",1100,1400,18,4],[516,"Muka Muka",600,300,18,2],[517,"Sand Stone",1300,1600,18,5],[518,"Boulder Tortoise",1450,2200,16,6],[519,"Fire Kraken",1600,1500,16,5],[520,"Turtle Bird",1900,1700,16,6],[521,"Skullbird",1900,1700,6,6],[522,"Monstrous Bird",2000,1900,6,6],[523,"The Bistro Butcher",1800,1000,7,4],[524,"Star Boy",550,500,16,2],[525,"Spirit of the Mountain",1300,1800,1,5],[526,"Neck Hunter",1750,1900,7,6],[527,"Milus Radiant",300,250,5,1],[528,"Togex",1600,1800,5,5],[529,"Flame Cerebrus",2100,1800,17,6],[530,"Eldeen",950,1000,1,3],[531,"Mystical Sand",2100,1700,18,6],[532,"Gemini Elf",1900,900,1,4],[533,"Kwagar Hercules",1900,1700,9,6],[534,"Minar",850,750,9,3],[535,"Kamakiriman",1150,1400,9,4],[536,"Mechaleon",800,600,11,2],[537,"Mega Thunderball",750,600,15,2],[538,"Niwatori",900,800,6,3],[539,"Corroding Shark",1100,700,2,3],[540,"Skelengel",900,400,8,2],[541,"Hane-Hane",450,500,5,2],[542,"Misairuzame",1400,1600,12,5],[543,"Tongyo",1350,800,12,4],[544,"Dharma Cannon",900,500,14,2],[545,"Skelgon",1700,1900,2,6],[546,"Wow Warrior",1250,900,12,4],[547,"Griggle",350,300,19,1],[548,"Bone Mouse",400,300,2,1],[549,"Frog The Jam",700,500,16,2],[550,"Behegon",1350,1000,16,4],[551,"Dark Elf",2000,800,1,4],[552,"Winged Dragon #2",1200,1000,6,4],[553,"Mushroom Man #2",1250,800,3,3],[554,"Lava Battleguard",1550,1800,3,5],[555,"Tyhone #2",1700,1900,0,6],[556,"The Wandering Doomed",800,600,2,2],[557,"Steel Ogre Grotto #1",1400,1800,14,5],[558,"Pot the Trick",400,400,18,2],[559,"Oscillo Hero",1250,700,3,3],[560,"Invader from Another Dimension",950,1400,7,4],[561,"Lesser Dragon",1200,1000,0,4],[562,"Needle Worm",750,600,9,2],[563,"Wretched Ghost of the Attic",550,400,7,2],[564,"Great Mammoth of Goldfine",2200,1800,2,6],[565,"Man-eating Black Shark",2100,1300,12,5],[566,"Yormungarde",1200,900,11,3],[567,"Darkworld Thorns",1200,900,19,3],[568,"Anthrosaurus",1000,850,10,3],[569,"Drooling Lizard",900,800,11,3],[570,"Trakadon",1300,800,10,3],[571,"B. Dragon Jungle King",2100,1800,0,6],[572,"Empress Judge",2100,1700,3,6],[573,"Little D",1100,700,10,3],[574,"Witch of the Black Forest",1100,1200,1,4],[575,"Ancient One of the Deep Forest",1800,1900,5,6],[576,"Giant Scorpion of the Tundra",1100,1000,9,3],[577,"Crow Goblin",1850,1600,6,5],[578,"Leo Wizard",1350,1200,1,5],[579,"Abyss Flower",750,400,19,2],[580,"Patrol Robo",1100,900,14,3],[581,"Takuhee",1450,1000,6,4],[582,"Dark Witch",1800,1700,8,5],[583,"Weather Report",950,1500,16,4],[584,"Binding Chain",1000,1100,8,3],[585,"Mechanical Snail",800,1000,14,3],[586,"Greenkappa",650,900,3,3],[587,"Mon Larvas",1300,1400,5,4],[588,"Living Vase",900,1100,19,3],[589,"Tentacle Plant",500,600,19,2],[590,"Beaked Snake",800,900,11,3],[591,"Morphing Jar",700,600,18,2],[592,"Muse-A",850,900,8,3],[593,"Giant Turtle Who Feeds on Flames",1400,1800,16,5],[594,"Rose Spectre of Dunn",2000,1800,19,6],[595,"Fiend Refrection #1",1300,1400,6,4],[596,"Ghoul with an Appetite",1600,1200,2,4],[597,"Pale Beast",1500,1200,5,4],[598,"Little Chimera",600,550,5,2],[599,"Violent Rain",1550,800,16,4],[600,"Key Mace #2",1050,1200,7,4],[601,"Tenderness",700,1400,8,3],[602,"Penguin Soldier",750,500,16,2],[603,"Fairy Dragon",1100,1200,0,4],[604,"Obese Marmot of Nefariousness",750,800,5,3],[605,"Liquid Beast",950,800,16,3],[606,"Twin Long Rods #2",850,700,16,3],[607,"Great Bill",1250,1300,5,4],[608,"Shining Friendship",1300,1100,8,4],[609,"Bladefly",600,700,9,2],[610,"Electric Lizard",850,800,15,3],[611,"Hiro's Shadow Scout",650,500,7,2],[612,"Lady of Faith",1100,800,1,3],[613,"Twin-headed Thunder Dragon",2800,2100,15,7],[614,"Hunter Spider",1600,1400,9,5],[615,"Armored Starfish",850,1400,16,4],[616,"Hourglass of Courage",1100,1200,8,4],[617,"Marine Beast",1700,1600,12,5],[618,"Warrior of Tradition",1900,1700,3,6],[619,"Rock Spirit",1650,1900,1,5],[620,"Snakeyashi",1000,1200,19,4],[621,"Succubus Knight",1650,1300,3,5],[622,"Ill Witch",1600,1500,1,5],[623,"The Thing That Hides in the Mud",1200,1300,18,4],[624,"High Tide Gyojin",1650,1300,16,5],[625,"Fairy of the Fountain",1600,1100,16,4],[626,"Amazon of the Seas",1300,1400,12,4],[627,"Nekogal #2",1900,2000,4,6],[628,"Witch's Apprentice",550,500,1,2],[629,"Armored Rat",950,1100,5,3],[630,"Ancient Lizard Warrior",1400,1100,11,4],[631,"Maiden of the Moonlight",1500,1300,1,4],[632,"Stone Ogre Grotto",1600,1500,18,5],[633,"Winged Egg of New Life",1400,1700,8,5],[634,"Night Lizard",1150,1300,16,4],[635,"Queen's Double",350,300,3,1],[636,"Blue-winged Crown",1600,1200,6,4],[637,"Trent",1500,1800,19,5],[638,"Queen of Autumn Leaves",1800,1500,19,5],[639,"Amphibious Bugroth",1850,1300,16,5],[640,"Acid Crawler",900,700,9,3],[641,"Invader of the Throne",1350,1700,3,5],[642,"Mystical Sheep #1",1150,900,5,3],[643,"Disk Magician",1350,1000,14,4],[644,"Flame Viper",400,450,17,2],[645,"Royal Guard",1900,2200,14,6],[646,"Gruesome Goo",1300,700,16,3],[647,"Hyosube",1500,900,16,4],[648,"Machine Attacker",1600,1300,14,5],[649,"Hibikime",1450,1000,3,4],[650,"Whiptail Crow",1650,1600,7,5],[651,"Kunai with Chain",0,0,23,0],[652,"Magical Labyrinth",0,0,23,0],[653,"Warrior Elimination",0,0,20,0],[654,"Salamandra",0,0,23,0],[655,"Cursebreaker",0,0,20,0],[656,"Eternal Rest",0,0,20,0],[657,"Megamorph",0,0,23,0],[658,"Metalmorph",0,0,23,0],[659,"Winged Trumpeter",0,0,23,0],[660,"Stain Storm",0,0,20,0],[661,"Crush Card",0,0,20,0],[662,"Eradicating Aerosol",0,0,20,0],[663,"Breath of Light",0,0,20,0],[664,"Eternal Draught",0,0,20,0],[665,"Curse of Millennium Shield",0,0,22,0],[666,"Yamadron Ritual",0,0,22,0],[667,"Gate Guardian Ritual",0,0,22,0],[668,"Bright Castle",0,0,23,0],[669,"Shadow Spell",0,0,20,0],[670,"Black Luster Ritual",0,0,22,0],[671,"Zera Ritual",0,0,22,0],[672,"Harpie's Feather Duster",0,0,20,0],[673,"War-lion Ritual",0,0,22,0],[674,"Beastry Mirror Ritual",0,0,22,0],[675,"Ultimate Dragon",0,0,22,0],[676,"Commencement Dance",0,0,22,0],[677,"Hamburger Recipe",0,0,22,0],[678,"Revival of Sennen Genjin",0,0,22,0],[679,"Novox's Prayer",0,0,22,0],[680,"Curse of Tri-Horned Dragon",0,0,22,0],[681,"House of Adhesive Tape",0,0,21,0],[682,"Eatgaboon",0,0,21,0],[683,"Bear Trap",0,0,21,0],[684,"Invisible Wire",0,0,21,0],[685,"Acid Trap Hole",0,0,21,0],[686,"Widespread Ruin",0,0,21,0],[687,"Goblin Fan",0,0,21,0],[688,"Bad Reaction to Simochi",0,0,21,0],[689,"Reverse Trap",0,0,21,0],[690,"Fake Trap",0,0,21,0],[691,"Revived of Serpent Night Dragon",0,0,22,0],[692,"Turtle Oath",0,0,22,0],[693,"Contruct of Mask",0,0,22,0],[694,"Resurrection of Chakra",0,0,22,0],[695,"Puppet Ritual",0,0,22,0],[696,"Javelin Beetle Pact",0,0,22,0],[697,"Garma Sword Oath",0,0,22,0],[698,"Cosmo Queen's Prayer",0,0,22,0],[699,"Revival of Skeleton Rider",0,0,22,0],[700,"Fortress Whale's Oath",0,0,22,0],[701,"Performance of Sword",1950,1850,3,6],[702,"Hungry Burger",2000,1850,3,6],[703,"Sengenjin",2750,2500,4,8],[704,"Skull Guardian",2050,2500,3,7],[705,"Tri-horned Dragon",2850,2350,0,8],[706,"Serpent Night Dragon",2350,2400,0,7],[707,"Skull Knight",2650,2250,1,7],[708,"Cosmo Queen",2900,2450,1,8],[709,"Chakra",2450,2000,7,7],[710,"Crab Turtle",2550,2500,16,8],[711,"Mikazukinoyaiba",2200,2350,0,7],[712,"Meteor Dragon",1800,2000,0,6],[713,"Meteor B. Dragon",3500,2000,0,8],[714,"Firewing Pegasus",2250,1800,5,6],[715,"Psycho-Puppet",2000,2350,7,7],[716,"Garma Sword",2550,2150,3,7],[717,"Javelin Beetle",2450,2550,9,8],[718,"Fortress Whale",2350,2150,12,7],[719,"Dokurorider",1900,1850,2,6],[720,"Mask of Shine & Dark",2000,1800,1,6],[721,"Dark Magic Ritual",0,0,22,0],[722,"Magician of Black Chaos",2800,2600,1,8]];
+// [id, name, atk, def, type, level, starchip cost, password]
+const CARDS = [[1,"Blue-eyes White Dragon",3000,2500,0,8,999999,"89631139"],[2,"Mystical Elf",800,2000,1,4,160,"15025844"],[3,"Hitotsu-me Giant",1200,1000,4,4,70,"76184692"],[4,"Baby Dragon",1200,700,0,3,999999,"88819587"],[5,"Ryu-kishin",1000,500,7,3,30,"15303296"],[6,"Feral Imp",1300,1400,7,4,140,"41392891"],[7,"Winged Dragon #1",1400,1200,0,4,999999,"87796900"],[8,"Mushroom Man",800,600,19,2,30,"14181608"],[9,"Shadow Specter",500,200,2,1,15,"40575313"],[10,"Blackland Fire Dragon",1500,800,0,4,80,"87564352"],[11,"Sword Arm of Dragon",1750,2030,10,6,1000,"13069066"],[12,"Swamp Battleguard",1800,1500,3,5,290,"40453765"],[13,"Tyhone",1200,1400,6,4,120,"72842870"],[14,"Battle Steer",1800,1300,4,5,230,"18246479"],[15,"Flame Swordsman",1800,1600,3,5,320,"45231177"],[16,"Time Wizard",500,400,1,2,999999,"71625222"],[17,"Right Leg of the Forbidden One",200,300,1,1,999999,"08124921"],[18,"Left Leg of the Forbidden One",200,300,1,1,999999,"44519536"],[19,"Right Arm of the Forbidden One",200,300,1,1,999999,"70903634"],[20,"Left Arm of the Forbidden One",200,300,1,1,999999,"07902349"],[21,"Exodia the Forbidden",1000,1000,1,3,999999,"33396948"],[22,"Summoned Skull",2500,1200,7,6,999999,"70781052"],[23,"The Wicked Worm Beast",1400,700,5,3,60,"06285791"],[24,"Skull Servant",300,200,2,1,10,"32274490"],[25,"Horn Imp",1300,1000,7,4,80,"69669405"],[26,"Battle Ox",1700,1000,4,4,999999,"05053103"],[27,"Beaver Warrior",1200,1500,4,4,140,"32452818"],[28,"Rock Ogre Grotto #1",800,1200,18,3,999999,"68846917"],[29,"Mountain Warrior",600,1000,4,3,35,"04931562"],[30,"Zombie Warrior",1200,900,2,3,60,"31339260"],[31,"Koumori Dragon",1500,1200,0,4,140,"67724379"],[32,"Two-headed King Rex",1600,1200,10,4,160,"94119974"],[33,"Judge Man",2200,1500,3,6,1000,"30113682"],[34,"Saggi the Dark Clown",600,1500,1,3,60,"66602787"],[35,"Dark Magician",2500,2100,1,7,999999,"46986414"],[36,"The Snake Hair",1500,1200,2,4,140,"29491031"],[37,"Gaia the Dragon Champion",2600,2100,0,7,999999,"66889139"],[38,"Gaia the Fierce Knight",2300,2100,3,7,999999,"06368038"],[39,"Curse of Dragon",2000,1500,0,5,999999,"28279543"],[40,"Dragon Piper",200,1800,17,3,55,"55763552"],[41,"Celtic Guardian",1400,1200,3,4,120,"91152256"],[42,"Illusionist Faceless Mage",1200,2200,1,5,320,"28546905"],[43,"Karbonala Warrior",1500,1200,3,4,140,"54541900"],[44,"Rogue Doll",1600,1000,1,4,120,"91939608"],[45,"Oscillo Hero #2",1000,500,15,3,30,"27324313"],[46,"Griffore",1200,1500,5,4,140,"53829412"],[47,"Torike",1200,600,5,3,45,"80813021"],[48,"Sangan",1000,600,7,3,35,"26202165"],[49,"Big Insect",1200,1500,9,4,140,"53606874"],[50,"Basic Insect",500,700,9,2,25,"89091579"],[51,"Armored Lizard",1500,1200,11,4,999999,"15480588"],[52,"Hercules Beetle",1500,2000,9,5,999999,"52584282"],[53,"Killer Needle",1200,1000,9,4,70,"88979991"],[54,"Gokibore",1200,1400,9,4,999999,"15367030"],[55,"Giant Flea",1500,1200,9,4,140,"41762634"],[56,"Larvae Moth",500,400,9,2,999999,"87756343"],[57,"Great Moth",2600,2500,9,8,999999,"14141448"],[58,"Kuriboh",300,200,7,1,10,"40640057"],[59,"Mammoth Graveyard",1200,800,10,3,55,"40374923"],[60,"Great White",1600,800,12,4,999999,"13429800"],[61,"Wolf",1200,800,5,3,55,"49417509"],[62,"Harpie Lady",1300,1400,6,4,999999,"76812113"],[63,"Harpie Lady Sisters",1950,2100,6,6,999999,"12206212"],[64,"Tiger Axe",1300,1100,4,4,999999,"49791927"],[65,"Silver Fang",1200,800,5,3,55,"90357090"],[66,"Kojikocy",1500,1200,3,4,140,"01184620"],[67,"Perfectly Ultimate Great Moth",3500,3000,9,8,999999,"48579379"],[68,"Garoozis",1800,1500,4,5,290,"14977074"],[69,"Thousand Dragon",2400,2000,0,7,999999,"41462083"],[70,"Fiend Kraken",1200,1400,16,4,120,"77456781"],[71,"Jellyfish",1200,1500,16,4,140,"14851496"],[72,"Cocoon of Evolution",0,2000,9,3,999999,"40240595"],[73,"Kairyu-shin",1800,1500,13,5,290,"76634149"],[74,"Giant Soldier of Stone",1300,2000,18,3,290,"13039848"],[75,"Man-eating Plant",800,600,19,2,30,"49127943"],[76,"Krokodilus",1100,1200,11,4,80,"76512652"],[77,"Grappler",1300,1200,11,4,100,"02906250"],[78,"Axe Raider",1700,1150,3,4,160,"48305365"],[79,"Megazowler",1800,2000,10,6,500,"75390004"],[80,"Uraby",1500,800,10,4,80,"01784619"],[81,"Crawling Dragon #2",1600,1200,10,4,160,"38289717"],[82,"Red-eyes B. Dragon",2400,2000,0,7,999999,"74677422"],[83,"Castle of Dark Illusions",920,1930,7,4,160,"00062121"],[84,"Reaper of the Cards",1380,1930,7,5,290,"33066139"],[85,"King of Yamimakai",2000,1530,7,5,350,"69455834"],[86,"Barox",1380,1530,7,5,180,"06840573"],[87,"Dark Chimera",1610,1460,7,5,200,"32344688"],[88,"Metal Guardian",1150,2150,7,5,290,"68339286"],[89,"Catapult Turtle",1000,2000,16,5,200,"95727991"],[90,"Gyakutenno Megami",1800,2000,8,6,500,"31122090"],[91,"Mystic Horseman",1300,1550,5,4,999999,"68516705"],[92,"Rabid Horseman",2000,1700,4,6,999999,"94905343"],[93,"Zanki",1500,1700,3,5,260,"30090452"],[94,"Crawling Dragon",1600,1400,0,5,200,"67494157"],[95,"Crass Clown",1350,1400,7,4,140,"93889755"],[96,"Armored Zombie",1500,0,2,3,260,"20277860"],[97,"Dragon Zombie",1600,0,2,3,200,"66672569"],[98,"Clown Zombie",1350,0,2,2,140,"92667214"],[99,"Pumpking the King of Ghosts",1800,2000,2,6,500,"29155212"],[100,"Battle Warrior",700,1000,3,3,40,"55550921"],[101,"Wings of Wicked Flame",700,600,17,2,30,"92944626"],[102,"Mask of Darkness",900,400,7,2,30,"28933734"],[103,"Job-change Mirror",800,1300,7,3,999999,"55337339"],[104,"Curtain of the Dark Ones",600,500,1,2,25,"22026707"],[105,"Tomozaurus",500,400,10,2,20,"46457856"],[106,"Spirit of the Winds",1700,1400,1,5,230,"54615781"],[107,"Kageningen",800,600,3,2,30,"80600490"],[108,"Graveyard and the Hand of Invitation",700,900,2,3,35,"27094595"],[109,"Goddess with the Third Eye",1200,1000,8,4,70,"53493204"],[110,"Hero of the East",1100,1000,3,3,60,"89987208"],[111,"Doma The Angel of Silence",1600,1400,8,5,200,"16972957"],[112,"That Which Feeds on Life",1200,1000,7,4,70,"52367652"],[113,"Dark Gray",800,900,5,3,40,"09159938"],[114,"White Magical Hat",1000,700,1,3,40,"15150365"],[115,"Kamion Wizard",1300,1100,1,4,120,"41544074"],[116,"Nightmare Scorpion",900,800,9,3,40,"88643173"],[117,"Spirit of the Books",1400,1200,6,4,120,"14037717"],[118,"Supporter in the Shadows",1000,1000,3,3,55,"41422426"],[119,"Trial of Nightmares",1300,900,7,4,70,"77827521"],[120,"Dream Clown",1200,900,3,3,60,"13215230"],[121,"Sleeping Lion",700,1700,5,4,120,"40200834"],[122,"Yamatano Dragon Scroll",900,300,0,2,25,"76704943"],[123,"Dark Plant",300,400,19,1,15,"13193642"],[124,"Ancient Tool",1700,1400,14,5,230,"49587396"],[125,"Faith Bird",1500,1100,6,4,120,"75582395"],[126,"Orion the Battle King",1800,1500,8,5,290,"02971090"],[127,"Ansatsu",1700,1200,3,5,180,"48365709"],[128,"LaMoon",1200,1700,1,5,180,"75850803"],[129,"Nemuriko",800,700,1,3,30,"90963488"],[130,"Weather Control",600,400,8,2,20,"37243151"],[131,"Octoberser",1600,1400,16,5,200,"74637266"],[132,"The 13th Grave",1200,900,2,3,60,"00032864"],[133,"Charubin the Fire Knight",1100,800,17,3,50,"37421579"],[134,"Mystical Capture Chain",700,700,8,2,30,"63515678"],[135,"Fiend's Hand",600,600,2,2,25,"52800428"],[136,"Witty Phantom",1400,1300,7,4,140,"36304921"],[137,"Mystery Hand",500,500,7,2,20,"62793020"],[138,"Dragon Statue",1100,900,3,3,55,"09197735"],[139,"Blue-eyed Silver Zombie",900,700,2,3,35,"35282433"],[140,"Toad Master",1000,1000,16,3,55,"62671448"],[141,"Spiked Snail",700,1300,9,3,55,"98075147"],[142,"Flame Manipulator",900,1000,1,3,50,"34460851"],[143,"Necrolancer the Timelord",800,900,1,3,40,"61454890"],[144,"Djinn the Watcher of the Wind",700,900,1,3,35,"97843505"],[145,"The Bewitching Phantom Thief",700,700,1,2,30,"24348204"],[146,"Temple of Skulls",900,1300,2,4,70,"00732302"],[147,"Monster Egg",600,900,3,3,999999,"36121917"],[148,"The Shadow Who Controls the Dark",800,700,7,3,30,"63125616"],[149,"Lord of the Lamp",1400,1200,7,4,120,"99510761"],[150,"Akihiron",1700,1400,16,5,230,"36904469"],[151,"Rhaimundos of the Red Sword",1200,1300,3,4,100,"62403074"],[152,"The Melting Red Shadow",500,700,16,2,25,"98898173"],[153,"Dokuroizo the Grim Reaper",900,1200,2,3,60,"25882881"],[154,"Fire Reaper",700,500,2,2,25,"53581214"],[155,"Larvas",800,1000,5,3,45,"94675535"],[156,"Hard Armor",300,1200,3,3,30,"20060230"],[157,"Firegrass",700,600,19,2,30,"53293545"],[158,"Man Eater",800,600,19,2,30,"93553943"],[159,"Dig Beak",500,800,5,2,30,"29948642"],[160,"M-warrior #1",1000,500,3,3,30,"56342351"],[161,"M-warrior #2",500,1000,3,3,30,"92731455"],[162,"Tainted Wisdom",1250,800,7,3,55,"28725004"],[163,"Lisark",1300,1300,5,4,120,"55210709"],[164,"Lord of Zemia",1300,1000,7,4,80,"81618817"],[165,"The Judgement Hand",1400,700,3,3,60,"28003512"],[166,"Mysterious Puppeteer",1000,1500,3,4,100,"54098121"],[167,"Ancient Jar",400,200,18,1,15,"81492226"],[168,"Darkfire Dragon",1500,1250,0,4,140,"17881964"],[169,"Dark King of the Abyss",1200,800,7,3,55,"53375573"],[170,"Spirit of the Harp",800,2000,8,4,160,"80770678"],[171,"Big Eye",1200,1000,7,4,70,"16768387"],[172,"Armaill",700,1300,3,3,55,"53153481"],[173,"Dark Prisoner",600,1000,7,3,35,"89558090"],[174,"Hurricail",900,200,1,2,25,"15042735"],[175,"Ancient Brain",1000,700,7,3,40,"42431843"],[176,"Fire Eye",800,600,17,2,30,"88435542"],[177,"Monsturtle",800,1000,16,3,45,"15820147"],[178,"Claw Reacher",1000,800,7,3,45,"41218256"],[179,"Phantom Dewan",700,600,1,2,30,"77603950"],[180,"Arlownay",800,1000,19,3,45,"14708569"],[181,"Dark Shade",1000,1000,7,3,55,"40196604"],[182,"Masked Clown",500,700,3,2,25,"77581312"],[183,"Lucky Trinket",600,800,1,2,30,"03985011"],[184,"Genin",600,900,1,3,30,"49370026"],[185,"Eyearmor",600,500,3,2,25,"64511793"],[186,"Fiend Refrection #2",1100,1400,6,4,100,"02863439"],[187,"Gate Deeg",700,800,5,3,30,"49258578"],[188,"Synchar",800,900,5,3,40,"75646173"],[189,"Fusionist",900,700,5,3,35,"01641882"],[190,"Akakieisu",1000,800,1,3,45,"38035986"],[191,"LaLa Li-oon",600,600,15,2,25,"09430387"],[192,"Key Mace",400,300,8,1,15,"01929294"],[193,"Turtle Tiger",1000,1500,16,4,100,"37313348"],[194,"Terra the Terrible",1200,1300,7,4,100,"63308047"],[195,"Doron",900,500,3,2,30,"00756652"],[196,"Arma Knight",1000,1200,16,4,70,"36151751"],[197,"Mech Mole Zombie",500,400,2,2,20,"63545455"],[198,"Happy Lover",800,500,8,2,30,"99030164"],[199,"Penguin Knight",900,800,16,3,40,"36039163"],[200,"Petit Dragon",600,700,0,2,30,"75356564"],[201,"Frenzied Panda",1200,1000,5,4,70,"98818516"],[202,"Air Marmot of Nefariousness",400,600,5,2,20,"75889523"],[203,"Phantom Ghost",600,800,2,2,30,"61201220"],[204,"Mabarrel",1700,1400,7,5,230,"98795934"],[205,"Dorover",900,800,16,3,40,"24194033"],[206,"Twin Long Rods #1",900,700,16,3,35,"60589682"],[207,"Droll Bird",600,500,6,2,25,"97973387"],[208,"Petit Angel",600,900,8,3,30,"38142739"],[209,"Winged Cleaver",700,700,9,2,30,"39175982"],[210,"Hinotama Soul",600,500,17,2,25,"96851799"],[211,"Kaminarikozou",700,600,15,2,30,"15510988"],[212,"Meotoko",700,600,5,2,30,"53832650"],[213,"Aqua Madoor",1200,2000,1,4,260,"85639257"],[214,"Kagemusha of the Blue Flame",800,400,3,2,25,"15401633"],[215,"Flame Ghost",1000,800,2,3,45,"58528964"],[216,"Dryad",1200,1400,1,4,120,"84916669"],[217,"B. Skull Dragon",3200,2500,0,9,999999,"11901678"],[218,"Two-mouth Darkruler",900,700,10,3,35,"57305373"],[219,"Solitude",1050,1000,4,3,55,"84794011"],[220,"Masked Sorcerer",900,1400,1,4,80,"10189126"],[221,"Kumootoko",700,1400,9,3,60,"56283725"],[222,"Midnight Fiend",800,600,7,2,30,"83678433"],[223,"Roaring Ocean Snake",2100,1800,16,6,550,"19066538"],[224,"Trap Master",500,1100,3,3,35,"46461247"],[225,"Fiend Sword",1400,800,3,4,70,"22855882"],[226,"Skull Stalker",900,800,3,3,40,"54844990"],[227,"Hitodenchak",600,700,16,2,30,"46718686"],[228,"Wood Remains",1000,900,2,3,50,"17733394"],[229,"Hourglass of Life",700,600,8,2,30,"08783685"],[230,"Rare Fish",1500,1200,12,4,140,"80516007"],[231,"Wood Clown",800,1200,3,3,55,"17511156"],[232,"Madjinn Gunn",600,800,7,2,30,"43905751"],[233,"Dark Titan of Terror",1300,1100,7,4,120,"89494469"],[234,"Beautiful Headhuntress",1600,800,3,4,120,"16899564"],[235,"Wodan the Resident of the Forest",900,1200,3,3,999999,"42883273"],[236,"Guardian of the Labyrinth",1000,1200,3,4,70,"89272878"],[237,"Haniwa",500,500,18,2,20,"84285623"],[238,"Yashinoki",800,600,19,2,30,"41061625"],[239,"Vishwar Randi",900,700,3,3,35,"78556320"],[240,"The Drdek",700,800,7,3,30,"08944575"],[241,"Dark Assailant",1200,1200,2,4,120,"41949033"],[242,"Candle of Fate",600,600,7,2,25,"47695416"],[243,"Water Element",900,700,16,3,35,"03732747"],[244,"Dissolverock",900,1000,18,3,50,"40826495"],[245,"Meda Bat",800,400,7,2,25,"76211194"],[246,"One Who Hunts Souls",1100,1000,4,4,60,"03606209"],[247,"Root Water",900,800,12,3,40,"39004808"],[248,"Master & Expert",1200,1000,5,4,70,"75499502"],[249,"Water Omotics",1400,1200,16,4,120,"02483611"],[250,"Hyo",800,1200,3,3,55,"38982356"],[251,"Enchanting Mermaid",1200,900,12,3,60,"75376965"],[252,"Nekogal #1",1100,900,5,3,999999,"01761063"],[253,"Angelwitch",800,1000,1,3,45,"37160778"],[254,"Embryonic Beast",500,750,7,2,25,"64154377"],[255,"Prevent Rat",500,2000,5,4,100,"00549481"],[256,"Dimensional Warrior",1200,1000,3,4,70,"37043180"],[257,"Stone Armadiller",800,1200,18,3,55,"63432835"],[258,"Beastking of the Swamps",1000,1100,16,4,60,"99426834"],[259,"Ancient Sorcerer",1000,1300,1,4,80,"36821538"],[260,"Lunar Queen Elzaim",750,1100,8,3,45,"62210247"],[261,"Wicked Mirror",700,600,7,2,30,"15150371"],[262,"The Little Swordsman of Aile",800,1300,3,3,60,"25109950"],[263,"Rock Ogre Grotto #2",700,1400,18,3,60,"62193699"],[264,"Wing Egg Elf",500,1300,8,3,45,"98582704"],[265,"The Furious Sea King",800,700,16,3,30,"18710707"],[266,"Princess of Tsurugi",900,700,3,3,35,"51371017"],[267,"Unknown Warrior of Fiend",1000,500,3,3,30,"97360116"],[268,"Sectarian of Secrets",700,500,1,2,25,"15507080"],[269,"Versago the Destroyer",1100,900,7,3,55,"50259460"],[270,"Wetha",1000,900,16,3,50,"96643568"],[271,"Megirus Light",900,600,7,3,30,"23032273"],[272,"Mavelus",1300,900,6,4,70,"59036972"],[273,"Ancient Tree of Enlightenment",600,1500,19,3,60,"86421986"],[274,"Green Phantom King",500,1600,19,3,60,"22910685"],[275,"Ground Attacker Bugroth",1500,1000,14,4,100,"58314394"],[276,"Ray & Temperature",1000,1000,8,3,55,"85309439"],[277,"Gorgon Egg",300,1300,7,3,35,"11793047"],[278,"Petit Moth",300,200,9,1,10,"58192742"],[279,"King Fog",1000,900,7,3,50,"84686841"],[280,"Protector of the Throne",800,1500,3,4,80,"10071456"],[281,"Mystic Clown",1500,1000,7,4,100,"47060154"],[282,"Mystical Sheep #2",800,1000,5,3,45,"83464209"],[283,"Holograh",1100,700,14,3,45,"10859908"],[284,"Tao the Chanter",1200,900,1,3,999999,"46247516"],[285,"Serpent Marauder",700,600,11,2,30,"82742611"],[286,"Gatekeeper",1500,1800,14,5,290,"19737320"],[287,"Ogre of the Black Shadow",1200,1400,4,4,120,"45121025"],[288,"Dark Artist",600,1400,7,3,999999,"72520073"],[289,"Change Slime",400,300,16,1,15,"18914778"],[290,"Moon Envoy",1100,1000,3,4,60,"45909477"],[291,"Fireyarou",1300,1000,17,4,80,"71407486"],[292,"Psychic Kappa",400,1000,16,2,30,"07892180"],[293,"Masaki the Legendary Swordsman",1100,1100,3,4,70,"44287299"],[294,"Dragoness the Wicked Knight",1200,900,3,3,60,"70681994"],[295,"Bio Plant",600,1300,7,3,50,"07670542"],[296,"One-eyed Shield Dragon",700,1300,0,3,55,"33064647"],[297,"Cyber Soldier of Darkworld",1400,1200,14,4,120,"75559356"],[298,"Wicked Dragon with the Ersatz Head",900,900,0,3,45,"02957055"],[299,"Sonic Maid",1200,900,3,3,999999,"38942059"],[300,"Kurama",800,800,6,3,35,"85705804"],[301,"Legendary Sword",0,0,23,0,800,"61854111"],[302,"Sword of Dark Destruction",0,0,23,0,800,"37120512"],[303,"Dark Energy",0,0,23,0,800,"04614116"],[304,"Axe of Despair",0,0,23,0,800,"40619825"],[305,"Laser Cannon Armor",0,0,23,0,800,"77007920"],[306,"Insect Armor with Laser Cannon",0,0,23,0,800,"03492538"],[307,"Elf's Light",0,0,23,0,800,"39897277"],[308,"Beast Fangs",0,0,23,0,800,"46009906"],[309,"Steel Shell",0,0,23,0,800,"02370081"],[310,"Vile Germs",0,0,23,0,800,"39774685"],[311,"Black Pendant",0,0,23,0,800,"65169794"],[312,"Silver Bow and Arrow",0,0,23,0,800,"01557499"],[313,"Horn of Light",0,0,23,0,800,"38552107"],[314,"Horn of the Unicorn",0,0,23,0,800,"64047146"],[315,"Dragon Treasure",0,0,23,0,800,"01435851"],[316,"Electro-whip",0,0,23,0,800,"37820550"],[317,"Cyber Shield",0,0,23,0,800,"63224564"],[318,"Elegant Egotist",0,0,23,0,999999,"90219263"],[319,"Mystical Moon",0,0,23,0,800,"36607978"],[320,"Stop Defense",0,0,20,0,800,"63102017"],[321,"Malevolent Nuzzler",0,0,23,0,800,"99597615"],[322,"Violet Crystal",0,0,23,0,800,"15052462"],[323,"Book of Secret Arts",0,0,23,0,800,"91595718"],[324,"Invigoration",0,0,23,0,800,"98374133"],[325,"Machine Conversion Factory",0,0,23,0,999999,"25769732"],[326,"Raise Body Heat",0,0,23,0,800,"51267887"],[327,"Follow Wind",0,0,23,0,800,"98252586"],[328,"Power of Kaishin",0,0,23,0,800,"77027445"],[329,"Dragon Capture Jar",0,0,20,0,999999,"50045299"],[330,"Forest",0,0,20,0,55,"87430998"],[331,"Wasteland",0,0,20,0,55,"23424603"],[332,"Mountain",0,0,20,0,55,"50913601"],[333,"Sogen",0,0,20,0,55,"86318356"],[334,"Umi",0,0,20,0,55,"22702055"],[335,"Yami",0,0,20,0,55,"59197169"],[336,"Dark Hole",0,0,20,0,20000,"53129443"],[337,"Raigeki",0,0,20,0,999999,"12580477"],[338,"Mooyan Curry",0,0,20,0,999999,"58074572"],[339,"Red Medicine",0,0,20,0,55,"38199696"],[340,"Goblin's Secret Remedy",0,0,20,0,20000,"11868825"],[341,"Soul of the Pure",0,0,20,0,35000,"47852924"],[342,"Dian Keto the Cure Master",0,0,20,0,999999,"84257639"],[343,"Sparks",0,0,20,0,10,"76103675"],[344,"Hinotama",0,0,20,0,55,"46130346"],[345,"Final Flame",0,0,20,0,20000,"73134081"],[346,"Ookazi",0,0,20,0,35000,"19523799"],[347,"Tremendous Fire",0,0,20,0,999999,"46918794"],[348,"Swords of Revealing Light",0,0,20,0,999999,"72302403"],[349,"Spellbinding Circle",0,0,20,0,999999,"18807108"],[350,"Dark-piercing Light",0,0,20,0,999999,"45895206"],[351,"Yaranzo",1300,1500,2,4,160,"71280811"],[352,"Kanan the Swordmistress",1400,1400,3,4,160,"12829151"],[353,"Takriminos",1500,1200,13,4,140,"44073668"],[354,"Stuffed Animal",1200,900,3,3,60,"71068263"],[355,"Megasonic Eye",1500,1800,14,5,290,"07562372"],[356,"Super War-lion",2300,2100,5,7,999999,"00000000"],[357,"Yamadron",1600,1800,0,5,320,"70345785"],[358,"Seiyaryu",2500,2300,0,7,1700,"06740720"],[359,"Three-legged Zombies",1100,800,2,3,50,"33734439"],[360,"Zera The Mant",2800,2300,7,8,999999,"00000000"],[361,"Flying Penguin",1200,1000,16,4,70,"05628232"],[362,"Millennium Shield",0,3000,3,5,200,"32012841"],[363,"Fairy's Gift",1400,1000,1,4,120,"68401546"],[364,"Black Luster Soldier",3000,2500,3,8,999999,"00000000"],[365,"Fiend's Mirror",2100,1800,7,6,999999,"00000000"],[366,"Labyrinth Wall",0,3000,18,5,200,"67284908"],[367,"Jirai Gumo",2200,100,9,4,80,"94773007"],[368,"Shadow Ghoul",1600,1300,2,5,180,"30778711"],[369,"Wall Shadow",1600,3000,3,7,999999,"63162310"],[370,"Labyrinth Tank",2400,2400,14,7,999999,"99551425"],[371,"Sanga of the Thunder",2600,2200,15,7,999999,"25955164"],[372,"Kazejin",2400,2200,1,7,999999,"62340868"],[373,"Suijin",2500,2400,16,7,999999,"98434877"],[374,"Gate Guardian",3750,3400,3,11,999999,"00000000"],[375,"Dungeon Worm",1800,1500,9,5,290,"51228280"],[376,"Monster Tamer",1800,1600,3,5,320,"97612389"],[377,"Ryu-kishin Powered",1600,1200,7,4,160,"24611934"],[378,"Swordstalker",2000,1600,3,6,400,"50005633"],[379,"La Jinn the Mystical Genie",1800,1000,7,4,160,"97590747"],[380,"Blue-eyes Ultimate Dragon",4500,3800,0,12,999999,"00000000"],[381,"Toon Alligator",800,1600,11,4,120,"59383041"],[382,"Rude Kaiser",1800,1600,4,5,320,"26378150"],[383,"Parrot Dragon",2000,1300,0,5,290,"62762898"],[384,"Dark Rabbit",1100,1500,5,4,120,"99261403"],[385,"Bickuribox",2300,2000,7,7,900,"25655502"],[386,"Harpie's Pet Dragon",2000,2500,0,7,999999,"52040216"],[387,"Mystic Lamp",400,300,1,1,15,"98049915"],[388,"Pendulum Machine",1750,2000,14,6,1000,"24433920"],[389,"Giltia the D. Knight",1850,1500,3,5,290,"51828629"],[390,"Launcher Spider",2200,2500,14,7,999999,"87322377"],[391,"Zoa",2600,1900,7,7,999999,"24311372"],[392,"Metalzoa",3000,2300,14,8,999999,"50705071"],[393,"Zone Eater",250,200,16,1,10,"86100785"],[394,"Steel Scorpion",250,300,14,1,10,"13599884"],[395,"Dancing Elf",300,200,8,1,10,"59983499"],[396,"Ocubeam",1550,1650,8,5,260,"86088138"],[397,"Leghul",300,350,9,1,15,"12472242"],[398,"Ooguchi",300,250,16,1,10,"58861941"],[399,"Swordsman from a Foreign Land",250,250,3,1,10,"85255550"],[400,"Emperor of the Land and Sea",1800,1500,11,5,290,"11250655"],[401,"Ushi Oni",2150,1950,7,6,700,"48649353"],[402,"Monster Eye",250,350,7,1,15,"84133008"],[403,"Leogun",1750,1550,5,5,290,"10538007"],[404,"Tatsunootoshigo",1350,1600,5,5,180,"47922711"],[405,"Saber Slasher",1450,1500,14,5,180,"73911410"],[406,"Yaiba Robo",1000,1300,14,4,80,"10315429"],[407,"Machine King",2200,2000,14,6,800,"46700124"],[408,"Giant Mech-soldier",1750,1900,14,6,400,"72299832"],[409,"Metal Dragon",1850,1700,14,6,350,"09293977"],[410,"Mechanical Spider",400,500,14,2,20,"45688586"],[411,"Bat",300,350,14,1,15,"72076281"],[412,"Giga-tech Wolf",1200,1400,14,4,120,"08471389"],[413,"Cyber Soldier",1500,1700,14,5,260,"44865098"],[414,"Shovel Crusher",900,1200,14,3,60,"71950093"],[415,"Mechanicalchacer",1850,800,14,4,120,"07359741"],[416,"Blocker",850,1800,14,4,120,"34743446"],[417,"Blast Juggler",800,900,14,3,40,"70138455"],[418,"Golgoil",900,1600,14,4,100,"07526150"],[419,"Giganto",1700,1800,14,5,350,"33621868"],[420,"Cyber-Stein",700,500,14,2,25,"69015963"],[421,"Cyber Commander",750,700,14,2,30,"06400512"],[422,"Jinzo #7",500,400,14,2,20,"32809211"],[423,"Dice Armadillo",1650,1800,14,5,320,"69893315"],[424,"Sky Dragon",1900,1800,0,6,1000,"95288024"],[425,"Thunder Dragon",1600,1500,15,5,230,"31786629"],[426,"Stone D.",2000,2300,18,7,900,"68171737"],[427,"Kaiser Dragon",2300,2000,0,7,900,"94566432"],[428,"Magician of Faith",300,400,1,1,999999,"31560081"],[429,"Goddess of Whim",950,700,8,3,999999,"67959180"],[430,"Water Magician",1400,1000,16,4,120,"93343894"],[431,"Ice Water",1150,900,16,3,55,"20848593"],[432,"Waterdragon Fairy",1100,700,16,3,45,"66836598"],[433,"Ancient Elf",1450,1200,1,4,120,"93221206"],[434,"Beautiful Beast Trainer",1750,1500,3,5,260,"29616941"],[435,"Water Girl",1250,1000,16,4,70,"55014050"],[436,"White Dolphin",500,400,12,2,20,"92409659"],[437,"Deepsea Shark",1900,1600,12,5,350,"28593363"],[438,"Metal Fish",1600,1900,14,5,350,"55998462"],[439,"Bottom Dweller",1650,1700,12,5,290,"81386177"],[440,"7 Colored Fish",1800,800,12,4,120,"23771716"],[441,"Mech Bass",1800,1500,14,5,290,"50176820"],[442,"Aqua Dragon",2250,1900,13,6,700,"86164529"],[443,"Sea King Dragon",2000,1700,13,6,1000,"23659124"],[444,"Turu-Purun",450,500,16,2,20,"59053232"],[445,"Guardian of the Sea",1300,1000,16,4,80,"85448931"],[446,"Aqua Snake",1050,900,16,3,50,"12436646"],[447,"Giant Red Seasnake",1800,800,16,4,120,"58831685"],[448,"Spike Seadra",1600,1300,13,5,180,"85326399"],[449,"30,000-Year White Turtle",1250,2100,16,5,290,"11714098"],[450,"Kappa Avenger",1200,900,16,3,60,"48109103"],[451,"Kanikabuto",650,900,16,3,30,"84103702"],[452,"Zarigun",600,700,16,2,30,"10598400"],[453,"Millennium Golem",2000,2200,18,6,800,"47986555"],[454,"Destroyer Golem",1500,1000,18,4,100,"73481154"],[455,"Barrel Rock",1000,1300,18,4,80,"10476868"],[456,"Minomushi Warrior",1300,1200,18,4,100,"46864967"],[457,"Stone Ghost",1200,1000,18,4,70,"72269672"],[458,"Kaminari Attack",1900,1400,15,5,290,"09653271"],[459,"Tripwire Beast",1200,1300,15,4,100,"45042329"],[460,"Bolt Escargot",1400,1500,15,5,180,"12146024"],[461,"Bolt Penguin",1100,800,15,3,50,"48531733"],[462,"The Immortal of Thunder",1500,1300,15,4,160,"84926738"],[463,"Electric Snake",800,900,15,3,40,"11324436"],[464,"Wing Eagle",1800,1500,6,5,290,"47319141"],[465,"Punished Eagle",2100,1800,6,6,550,"74703140"],[466,"Skull Red Bird",1550,1200,6,4,140,"10202894"],[467,"Crimson Sunbird",2300,1800,6,6,700,"46696593"],[468,"Queen Bird",1200,2000,6,5,260,"73081602"],[469,"Armed Ninja",300,300,3,1,15,"09076207"],[470,"Magical Ghost",1300,1400,2,4,140,"46474915"],[471,"Soul Hunter",2200,1800,7,6,800,"72869010"],[472,"Air Eater",2100,1600,7,6,1000,"08353769"],[473,"Vermillion Sparrow",1900,1500,17,5,320,"35752363"],[474,"Sea Kamen",1100,1300,16,4,120,"71746462"],[475,"Sinister Serpent",300,250,11,1,10,"08131171"],[476,"Ganigumo",600,800,9,2,30,"34536276"],[477,"Alinsection",950,700,9,3,35,"70924884"],[478,"Insect Soldiers of the Sky",1000,800,9,3,45,"07019529"],[479,"Cockroach Knight",800,900,9,3,999999,"33413638"],[480,"Kuwagata a",1250,1000,9,4,70,"60802233"],[481,"Burglar",850,800,5,3,35,"06297941"],[482,"Pragtical",1900,1500,10,5,320,"33691040"],[483,"Garvas",2000,1700,5,6,1000,"69780745"],[484,"Ameba",300,350,16,1,15,"95174353"],[485,"Korogashi",550,400,9,2,20,"32569498"],[486,"Boo Koo",650,500,1,2,25,"68963107"],[487,"Flower Wolf",1800,1400,5,5,260,"95952802"],[488,"Rainbow Flower",400,500,19,2,20,"21347810"],[489,"Barrel Lily",1100,600,19,3,40,"67841515"],[490,"Needle Ball",750,700,7,2,30,"94230224"],[491,"Peacock",1700,1500,6,5,260,"20624263"],[492,"Hoshiningen",500,700,8,2,25,"67629977"],[493,"Maha Vailo",1550,1400,1,5,180,"93013676"],[494,"Rainbow Marine Mermaid",1550,1700,12,5,260,"29402771"],[495,"Musician King",1750,1500,1,5,260,"56907389"],[496,"Wilmee",1000,1200,5,4,70,"92391084"],[497,"Yado Karu",900,1700,16,4,120,"29380133"],[498,"Morinphen",1550,1300,7,5,160,"55784832"],[499,"Kattapillar",250,300,9,1,999999,"81179446"],[500,"Dragon Seeker",2000,2100,7,6,700,"28563545"],[501,"Man-eater Bug",450,600,9,2,20,"54652250"],[502,"D. Human",1300,1100,3,4,120,"81057959"],[503,"Turtle Raccoon",700,900,16,3,35,"17441953"],[504,"Fungi of the Musk",400,300,7,1,15,"53830602"],[505,"Prisman",800,1000,18,3,45,"80234301"],[506,"Gale Dogra",650,600,9,2,25,"16229315"],[507,"Crazy Fish",1600,1200,12,4,160,"53713014"],[508,"Cyber Saurus",1800,1400,14,5,260,"89112729"],[509,"Bracchio-raidus",2200,2000,10,6,800,"16507828"],[510,"Laughing Flower",900,500,19,2,30,"42591472"],[511,"Bean Soldier",1400,1300,19,4,140,"84990171"],[512,"Cannon Soldier",1400,1300,14,4,140,"11384280"],[513,"Guardian of the Throne Room",1650,1600,14,5,260,"47879985"],[514,"Brave Scizzar",1300,1000,14,4,80,"74277583"],[515,"The Statue of Easter Island",1100,1400,18,4,100,"10262698"],[516,"Muka Muka",600,300,18,2,20,"46657337"],[517,"Sand Stone",1300,1600,18,5,180,"73051941"],[518,"Boulder Tortoise",1450,2200,16,6,400,"09540040"],[519,"Fire Kraken",1600,1500,16,5,230,"46534755"],[520,"Turtle Bird",1900,1700,16,6,400,"72929454"],[521,"Skullbird",1900,1700,6,6,400,"08327462"],[522,"Monstrous Bird",2000,1900,6,6,550,"35712107"],[523,"The Bistro Butcher",1800,1000,7,4,160,"71107816"],[524,"Star Boy",550,500,16,2,20,"08201910"],[525,"Spirit of the Mountain",1300,1800,1,5,230,"34690519"],[526,"Neck Hunter",1750,1900,7,6,400,"70084224"],[527,"Milus Radiant",300,250,5,1,10,"07489323"],[528,"Togex",1600,1800,5,5,320,"33878931"],[529,"Flame Cerebrus",2100,1800,17,6,550,"60862676"],[530,"Eldeen",950,1000,1,3,50,"06367785"],[531,"Mystical Sand",2100,1700,18,6,500,"32751480"],[532,"Gemini Elf",1900,900,1,4,160,"69140098"],[533,"Kwagar Hercules",1900,1700,9,6,400,"95144193"],[534,"Minar",850,750,9,3,35,"32539892"],[535,"Kamakiriman",1150,1400,9,4,100,"68928540"],[536,"Mechaleon",800,600,11,2,30,"94412545"],[537,"Mega Thunderball",750,600,15,2,30,"21817254"],[538,"Niwatori",900,800,6,3,40,"07805359"],[539,"Corroding Shark",1100,700,2,3,45,"34290067"],[540,"Skelengel",900,400,8,2,30,"60694662"],[541,"Hane-Hane",450,500,5,2,999999,"07089711"],[542,"Misairuzame",1400,1600,12,5,200,"33178416"],[543,"Tongyo",1350,800,12,4,60,"69572024"],[544,"Dharma Cannon",900,500,14,2,30,"96967123"],[545,"Skelgon",1700,1900,2,6,999999,"32355828"],[546,"Wow Warrior",1250,900,12,4,60,"69750536"],[547,"Griggle",350,300,19,1,15,"95744531"],[548,"Bone Mouse",400,300,2,1,15,"21239280"],[549,"Frog The Jam",700,500,16,2,25,"68638985"],[550,"Behegon",1350,1000,16,4,80,"94022093"],[551,"Dark Elf",2000,800,1,4,160,"21417692"],[552,"Winged Dragon #2",1200,1000,6,4,70,"57405307"],[553,"Mushroom Man #2",1250,800,3,3,55,"93900406"],[554,"Lava Battleguard",1550,1800,3,5,999999,"20394040"],[555,"Tyhone #2",1700,1900,0,6,999999,"56789759"],[556,"The Wandering Doomed",800,600,2,2,30,"93788854"],[557,"Steel Ogre Grotto #1",1400,1800,14,5,260,"29172562"],[558,"Pot the Trick",400,400,18,2,20,"55567161"],[559,"Oscillo Hero",1250,700,3,3,50,"82065276"],[560,"Invader from Another Dimension",950,1400,7,4,80,"28450915"],[561,"Lesser Dragon",1200,1000,0,4,70,"55444629"],[562,"Needle Worm",750,600,9,2,999999,"81843628"],[563,"Wretched Ghost of the Attic",550,400,7,2,20,"17238333"],[564,"Great Mammoth of Goldfine",2200,1800,2,6,800,"54622031"],[565,"Man-eating Black Shark",2100,1300,12,5,320,"80727036"],[566,"Yormungarde",1200,900,11,3,60,"17115745"],[567,"Darkworld Thorns",1200,900,19,3,60,"43500484"],[568,"Anthrosaurus",1000,850,10,3,45,"89904598"],[569,"Drooling Lizard",900,800,11,3,40,"16353197"],[570,"Trakadon",1300,800,10,3,60,"42348802"],[571,"B. Dragon Jungle King",2100,1800,0,6,999999,"89832901"],[572,"Empress Judge",2100,1700,3,6,500,"15237615"],[573,"Little D",1100,700,10,3,45,"42625254"],[574,"Witch of the Black Forest",1100,1200,1,4,80,"78010363"],[575,"Ancient One of the Deep Forest",1800,1900,5,6,1000,"14015067"],[576,"Giant Scorpion of the Tundra",1100,1000,9,3,60,"41403766"],[577,"Crow Goblin",1850,1600,6,5,320,"77998771"],[578,"Leo Wizard",1350,1200,1,5,100,"04392470"],[579,"Abyss Flower",750,400,19,2,25,"40387124"],[580,"Patrol Robo",1100,900,14,3,55,"76775123"],[581,"Takuhee",1450,1000,6,4,120,"03170832"],[582,"Dark Witch",1800,1700,8,5,350,"35565537"],[583,"Weather Report",950,1500,16,4,120,"72053645"],[584,"Binding Chain",1000,1100,8,3,60,"08058240"],[585,"Mechanical Snail",800,1000,14,3,45,"34442949"],[586,"Greenkappa",650,900,3,3,30,"61831093"],[587,"Mon Larvas",1300,1400,5,4,140,"07225792"],[588,"Living Vase",900,1100,19,3,55,"34320307"],[589,"Tentacle Plant",500,600,19,2,25,"60715406"],[590,"Beaked Snake",800,900,11,3,40,"06103114"],[591,"Morphing Jar",700,600,18,2,30,"33508719"],[592,"Muse-A",850,900,8,3,40,"69992868"],[593,"Giant Turtle Who Feeds on Flames",1400,1800,16,5,260,"96981563"],[594,"Rose Spectre of Dunn",2000,1800,19,6,500,"32485271"],[595,"Fiend Refrection #1",1300,1400,6,4,140,"68870276"],[596,"Ghoul with an Appetite",1600,1200,2,4,160,"95265975"],[597,"Pale Beast",1500,1200,5,4,140,"21263083"],[598,"Little Chimera",600,550,5,2,25,"68658728"],[599,"Violent Rain",1550,800,16,4,80,"94042337"],[600,"Key Mace #2",1050,1200,7,4,70,"20541432"],[601,"Tenderness",700,1400,8,3,60,"57935140"],[602,"Penguin Soldier",750,500,16,2,25,"93920745"],[603,"Fairy Dragon",1100,1200,0,4,999999,"20315854"],[604,"Obese Marmot of Nefariousness",750,800,5,3,30,"56713552"],[605,"Liquid Beast",950,800,16,3,40,"93108297"],[606,"Twin Long Rods #2",850,700,16,3,30,"29692206"],[607,"Great Bill",1250,1300,5,4,100,"55691901"],[608,"Shining Friendship",1300,1100,8,4,120,"82085619"],[609,"Bladefly",600,700,9,2,30,"28470714"],[610,"Electric Lizard",850,800,15,3,35,"55875323"],[611,"Hiro's Shadow Scout",650,500,7,2,25,"81863068"],[612,"Lady of Faith",1100,800,1,3,50,"17358176"],[613,"Twin-headed Thunder Dragon",2800,2100,15,7,1900,"54752875"],[614,"Hunter Spider",1600,1400,9,5,200,"80141480"],[615,"Armored Starfish",850,1400,16,4,70,"17535588"],[616,"Hourglass of Courage",1100,1200,8,4,80,"43530283"],[617,"Marine Beast",1700,1600,12,5,290,"29929832"],[618,"Warrior of Tradition",1900,1700,3,6,400,"56413937"],[619,"Rock Spirit",1650,1900,1,5,350,"82818645"],[620,"Snakeyashi",1000,1200,19,4,70,"29802344"],[621,"Succubus Knight",1650,1300,3,5,180,"55291359"],[622,"Ill Witch",1600,1500,1,5,230,"81686058"],[623,"The Thing That Hides in the Mud",1200,1300,18,4,100,"18180762"],[624,"High Tide Gyojin",1650,1300,16,5,180,"54579801"],[625,"Fairy of the Fountain",1600,1100,16,4,140,"81563416"],[626,"Amazon of the Seas",1300,1400,12,4,140,"17968114"],[627,"Nekogal #2",1900,2000,4,6,550,"43352213"],[628,"Witch's Apprentice",550,500,1,2,999999,"80741828"],[629,"Armored Rat",950,1100,5,3,55,"16246527"],[630,"Ancient Lizard Warrior",1400,1100,11,4,100,"43230671"],[631,"Maiden of the Moonlight",1500,1300,1,4,160,"79629370"],[632,"Stone Ogre Grotto",1600,1500,18,5,230,"15023985"],[633,"Winged Egg of New Life",1400,1700,8,5,230,"42418084"],[634,"Night Lizard",1150,1300,16,4,120,"78402798"],[635,"Queen's Double",350,300,3,1,15,"05901497"],[636,"Blue-winged Crown",1600,1200,6,4,160,"41396436"],[637,"Trent",1500,1800,19,5,290,"78780140"],[638,"Queen of Autumn Leaves",1800,1500,19,5,290,"04179849"],[639,"Amphibious Bugroth",1850,1300,16,5,230,"40173854"],[640,"Acid Crawler",900,700,9,3,999999,"77568553"],[641,"Invader of the Throne",1350,1700,3,5,200,"03056267"],[642,"Mystical Sheep #1",1150,900,5,3,55,"30451366"],[643,"Disk Magician",1350,1000,14,4,80,"76446915"],[644,"Flame Viper",400,450,17,2,20,"02830619"],[645,"Royal Guard",1900,2200,14,6,700,"39239728"],[646,"Gruesome Goo",1300,700,16,3,55,"65623423"],[647,"Hyosube",1500,900,16,4,120,"02118022"],[648,"Machine Attacker",1600,1300,14,5,180,"38116136"],[649,"Hibikime",1450,1000,3,4,120,"64501875"],[650,"Whiptail Crow",1650,1600,7,5,260,"91996584"],[651,"Kunai with Chain",0,0,23,0,800,"37390589"],[652,"Magical Labyrinth",0,0,23,0,10,"64389297"],[653,"Warrior Elimination",0,0,20,0,999999,"90873992"],[654,"Salamandra",0,0,23,0,800,"32268901"],[655,"Cursebreaker",0,0,20,0,10,"69666645"],[656,"Eternal Rest",0,0,20,0,999999,"95051344"],[657,"Megamorph",0,0,23,0,50000,"22046459"],[658,"Metalmorph",0,0,23,0,999999,"68540058"],[659,"Winged Trumpeter",0,0,23,0,800,"94939166"],[660,"Stain Storm",0,0,20,0,999999,"21323861"],[661,"Crush Card",0,0,20,0,999999,"57728570"],[662,"Eradicating Aerosol",0,0,20,0,999999,"94716515"],[663,"Breath of Light",0,0,20,0,999999,"20101223"],[664,"Eternal Draught",0,0,20,0,999999,"56606928"],[665,"Curse of Millennium Shield",0,0,22,0,10,"83094937"],[666,"Yamadron Ritual",0,0,22,0,10,"29089635"],[667,"Gate Guardian Ritual",0,0,22,0,999999,"56483330"],[668,"Bright Castle",0,0,23,0,800,"82878489"],[669,"Shadow Spell",0,0,20,0,999999,"29267084"],[670,"Black Luster Ritual",0,0,22,0,100,"55761792"],[671,"Zera Ritual",0,0,22,0,100,"81756897"],[672,"Harpie's Feather Duster",0,0,20,0,999999,"18144506"],[673,"War-lion Ritual",0,0,22,0,100,"54539105"],[674,"Beastry Mirror Ritual",0,0,22,0,100,"81933259"],[675,"Ultimate Dragon",0,0,22,0,999999,"17928958"],[676,"Commencement Dance",0,0,22,0,50,"43417563"],[677,"Hamburger Recipe",0,0,22,0,50,"80811661"],[678,"Revival of Sennen Genjin",0,0,22,0,100,"16206366"],[679,"Novox's Prayer",0,0,22,0,50,"43694075"],[680,"Curse of Tri-Horned Dragon",0,0,22,0,50,"79699070"],[681,"House of Adhesive Tape",0,0,21,0,999999,"15083728"],[682,"Eatgaboon",0,0,21,0,999999,"42578427"],[683,"Bear Trap",0,0,21,0,999999,"78977532"],[684,"Invisible Wire",0,0,21,0,999999,"15361130"],[685,"Acid Trap Hole",0,0,21,0,999999,"41356845"],[686,"Widespread Ruin",0,0,21,0,999999,"77754944"],[687,"Goblin Fan",0,0,21,0,999999,"04149689"],[688,"Bad Reaction to Simochi",0,0,21,0,999999,"40633297"],[689,"Reverse Trap",0,0,21,0,999999,"77622396"],[690,"Fake Trap",0,0,21,0,999999,"03027001"],[691,"Revived of Serpent Night Dragon",0,0,22,0,50,"39411600"],[692,"Turtle Oath",0,0,22,0,100,"76806714"],[693,"Contruct of Mask",0,0,22,0,100,"02304453"],[694,"Resurrection of Chakra",0,0,22,0,100,"39399168"],[695,"Puppet Ritual",0,0,22,0,50,"05783166"],[696,"Javelin Beetle Pact",0,0,22,0,999999,"41182875"],[697,"Garma Sword Oath",0,0,22,0,50,"78577570"],[698,"Cosmo Queen's Prayer",0,0,22,0,50,"04561679"],[699,"Revival of Skeleton Rider",0,0,22,0,10,"31066283"],[700,"Fortress Whale's Oath",0,0,22,0,10,"77454922"],[701,"Performance of Sword",1950,1850,3,6,999999,"00000000"],[702,"Hungry Burger",2000,1850,3,6,999999,"00000000"],[703,"Sengenjin",2750,2500,4,8,999999,"00000000"],[704,"Skull Guardian",2050,2500,3,7,999999,"00000000"],[705,"Tri-horned Dragon",2850,2350,0,8,999999,"00000000"],[706,"Serpent Night Dragon",2350,2400,0,7,999999,"00000000"],[707,"Skull Knight",2650,2250,1,7,999999,"02504891"],[708,"Cosmo Queen",2900,2450,1,8,999999,"00000000"],[709,"Chakra",2450,2000,7,7,999999,"00000000"],[710,"Crab Turtle",2550,2500,16,8,999999,"00000000"],[711,"Mikazukinoyaiba",2200,2350,0,7,999999,"38277918"],[712,"Meteor Dragon",1800,2000,0,6,999999,"64271667"],[713,"Meteor B. Dragon",3500,2000,0,8,999999,"00000000"],[714,"Firewing Pegasus",2250,1800,5,6,999999,"27054370"],[715,"Psycho-Puppet",2000,2350,7,7,999999,"00000000"],[716,"Garma Sword",2550,2150,3,7,999999,"00000000"],[717,"Javelin Beetle",2450,2550,9,8,999999,"00000000"],[718,"Fortress Whale",2350,2150,12,7,999999,"00000000"],[719,"Dokurorider",1900,1850,2,6,999999,"00000000"],[720,"Mask of Shine & Dark",2000,1800,1,6,999999,"00000000"],[721,"Dark Magic Ritual",0,0,22,0,999999,"00000000"],[722,"Magician of Black Chaos",2800,2600,1,8,999999,"00000000"]];
 const TYPES = ["Dragon","Spellcaster","Zombie","Warrior","Beast-Warrior","Beast","Winged Beast","Fiend","Fairy","Insect","Dinosaur","Reptile","Fish","Sea Serpent","Machine","Thunder","Aqua","Pyro","Rock","Plant","Magic","Trap","Ritual","Equip"];
 const byId = new Map(CARDS.map(c => [c[0], c]));
 
@@ -529,7 +556,8 @@ function makeZip(filename, data) {
 
 // --- state ---
 const $ = id => document.getElementById(id);
-const st = { card: null, fileName: "", saveIdx: -1, save: null, deck: [], slot: 0, cardId: null, dirty: false };
+// base = the save as opened (or last saved), undo = snapshots before each change
+const st = { card: null, fileName: "", saveIdx: -1, save: null, base: null, undo: [], deck: [], slot: 0, cardId: null };
 
 function deckRead() { const dv = new DataView(st.save.buffer); st.deck = Array.from({ length: 40 }, (_, i) => dv.getUint16(COPY_A + DECK + i * 2, true)); }
 function deckWrite() { const dv = new DataView(st.save.buffer); st.deck.forEach((id, i) => dv.setUint16(COPY_A + DECK + i * 2, id, true)); }
@@ -538,9 +566,45 @@ const trunkSet = (id, n) => { st.save[COPY_A + TRUNK + id - 1] = Math.max(0, Mat
 const chipsGet = () => new DataView(st.save.buffer).getUint32(COPY_A + CHIPS, true);
 const chipsSet = n => new DataView(st.save.buffer).setUint32(COPY_A + CHIPS, Math.max(0, Math.min(999999, n | 0)), true);
 
+function sameBytes(a, b) { if (a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
+const isDirty = () => !!(st.save && st.base) && !sameBytes(st.save, st.base);
+
 function status(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = kind; }
-function markDirty() { st.dirty = true; status("You have unsaved changes."); }
 const pad = (n, w = 3) => String(n).padStart(w, "0");
+const fmt = n => n.toLocaleString("en-US");
+
+// every change goes through here so undo/reset/dirty stay in sync
+function edit(fn, msg) {
+  if (!st.save) return;
+  const before = st.save.slice();
+  fn();
+  if (sameBytes(before, st.save)) { status(msg ? msg + " (nothing changed)" : "Nothing changed."); return; }
+  st.undo.push(before);
+  if (st.undo.length > 200) st.undo.shift();
+  refresh();
+  status(msg || "You have unsaved changes.");
+}
+function refresh() {
+  deckRead();
+  $("chips").value = chipsGet();
+  renderTrunk(); renderDeck(); renderStats(); showCard(st.cardId);
+  $("undo").disabled = !st.undo.length;
+  $("reset").disabled = !isDirty();
+}
+function undo() {
+  if (!st.save || !st.undo.length) return;
+  st.save = st.undo.pop();
+  refresh();
+  status(isDirty() ? "Undid the last change." : "Undid the last change. No unsaved changes left.");
+}
+async function reset() {
+  if (!isDirty()) return;
+  if (!(await ask("Reset?", "<p>Put everything back to how it was when you opened this save (or last saved)? You can undo this.</p>"))) return;
+  st.undo.push(st.save.slice());
+  st.save = st.base.slice();
+  refresh();
+  status("Everything is back to how it was.");
+}
 
 // --- loading ---
 async function loadFile(file) {
@@ -550,7 +614,7 @@ async function loadFile(file) {
     if (file.size > 4 * 1024 * 1024) throw new Error(`This file is too big to be a PS1 memory card (${(file.size / 1048576).toFixed(1)} MB). Memory cards are 128 KB.`);
     const card = parseMemoryCard(await file.arrayBuffer());
     if (!card.saves.length) throw new Error("There are no saves on this memory card.");
-    st.card = card; st.fileName = file.name; st.dirty = false;
+    st.card = card; st.fileName = file.name;
     const sel = $("saves"); sel.innerHTML = "";
     card.saves.forEach((s, i) => { const o = document.createElement("option"); o.value = i; o.textContent = s.name || `Save ${i + 1}`; sel.append(o); });
     let pick = card.saves.findIndex(s => versionOf(s.name));
@@ -567,7 +631,7 @@ async function loadFile(file) {
 function openSave(i) {
   const s = st.card.saves[i];
   const data = readSave(st.card, s);
-  st.saveIdx = i; st.save = null; st.dirty = false;
+  st.saveIdx = i; st.save = null; st.base = null; st.undo = [];
   const ver = versionOf(s.name);
   let ok = data.length >= COPY_B + BLK && verifyBlock(data, COPY_A);
   if (!ok && data.length >= COPY_B + BLK && verifyBlock(data, COPY_B)) { data.copyWithin(COPY_A, COPY_B, COPY_B + BLK); ok = true; }
@@ -583,12 +647,11 @@ function openSave(i) {
     return;
   }
   st.save = data;
-  deckRead();
+  st.base = data.slice();
   st.slot = 0;
   setEditable(true);
-  $("chips").value = chipsGet();
-  renderAll();
-  status(`Loaded ${ver || "save"}. Check the deck matches your game, then pick a slot and a card.`, "good");
+  refresh();
+  status(`Loaded ${ver}. Check the deck matches your game, then pick a slot and a card.`, "good");
 }
 
 // serials from the save file name
@@ -599,12 +662,16 @@ function versionOf(name) {
 }
 
 function setEditable(on) {
-  ["chips", "search", "sort", "owned", "sort-deck", "minus", "plus", "put", "save"].forEach(id => $(id).disabled = !on);
-  if (!on) { $("trunk").innerHTML = ""; $("deck").innerHTML = ""; $("deck-count").textContent = ""; $("owned-count").textContent = ""; $("chips").value = ""; showCard(null); }
+  ["chips", "chips-max", "search", "sort", "owned", "bulk", "sort-deck", "import", "export", "minus", "plus", "put", "save", "undo", "reset"].forEach(id => $(id).disabled = !on);
+  if (!on) {
+    $("trunk").innerHTML = ""; $("deck").innerHTML = ""; $("stats").innerHTML = "";
+    $("deck-count").textContent = ""; $("owned-count").textContent = ""; $("chips").value = "";
+    showCard(null);
+  }
 }
 
 // --- rendering ---
-function rowHTML(sel, num, name, stat, own) {
+function rowHTML(num, name, stat, own) {
   return `<span class="cur" aria-hidden="true">&#9654;</span><span class="num">${num}</span><span class="name">${name}</span>${own}${stat}`;
 }
 const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -615,27 +682,55 @@ function renderTrunk() {
   const q = $("search").value.trim().toLowerCase();
   const ownedOnly = $("owned").checked;
   const sort = $("sort").value;
-  let list = CARDS.filter(c => (!ownedOnly || trunkGet(c[0]) > 0) && (!q || c[1].toLowerCase().includes(q) || String(c[0]) === q.replace(/^0+/, "") ));
+  let list = CARDS.filter(c => (!ownedOnly || trunkGet(c[0]) > 0) && (!q || c[1].toLowerCase().includes(q) || String(c[0]) === q.replace(/^0+/, "")));
   const cmp = { id: (a, b) => a[0] - b[0], name: (a, b) => a[1].localeCompare(b[1]), atk: (a, b) => b[2] - a[2] || a[0] - b[0], def: (a, b) => b[3] - a[3] || a[0] - b[0], type: (a, b) => a[4] - b[4] || a[0] - b[0] }[sort];
   list.sort(cmp);
-  const ul = $("trunk");
+  const ul = $("trunk"), top = ul.scrollTop;
   ul.innerHTML = list.map(c => {
     const n = trunkGet(c[0]);
-    return `<li><button class="row${c[0] === st.cardId ? " sel" : ""}" data-id="${c[0]}">${rowHTML(false, pad(c[0]), esc(c[1]), "", `<span class="own${n ? "" : " zero"}">&times;${n}</span>`)}</button></li>`;
+    return `<li><button class="row${c[0] === st.cardId ? " sel" : ""}" data-id="${c[0]}">${rowHTML(pad(c[0]), esc(c[1]), "", `<span class="own${n ? "" : " zero"}">&times;${n}</span>`)}</button></li>`;
   }).join("") || `<li style="padding:10px;color:var(--dim)">No cards match.</li>`;
+  ul.scrollTop = top;
   let owned = 0; for (const c of CARDS) owned += trunkGet(c[0]) > 0 ? 1 : 0;
   $("owned-count").textContent = `${owned}/722 owned`;
 }
 
 function renderDeck() {
-  const ul = $("deck");
+  const ul = $("deck"), top = ul.scrollTop;
   ul.innerHTML = st.deck.map((id, i) => {
     const c = byId.get(id);
     const name = c ? esc(c[1]) : "Empty slot";
-    return `<li><button class="row${i === st.slot ? " sel" : ""}${c ? "" : " empty"}" data-slot="${i}">${rowHTML(false, pad(i + 1, 2), name, c ? `<span class="stat">${statText(c)}</span>` : "", "")}</button></li>`;
+    return `<li><button class="row${i === st.slot ? " sel" : ""}${c ? "" : " empty"}" data-slot="${i}">${rowHTML(pad(i + 1, 2), name, c ? `<span class="stat">${statText(c)}</span>` : "", "")}</button></li>`;
   }).join("");
+  ul.scrollTop = top;
   const filled = st.deck.filter(id => byId.has(id)).length;
   const dc = $("deck-count"); dc.textContent = `${filled}/40`; dc.classList.toggle("bad", filled !== 40);
+  $("put").textContent = `Put in deck slot ${st.slot + 1}`;
+}
+
+function renderStats() {
+  const cards = st.deck.map(id => byId.get(id)).filter(Boolean);
+  const mons = cards.filter(isMonster);
+  const count = t => cards.filter(c => c[4] === t).length;
+  const avg = k => mons.length ? Math.round(mons.reduce((s, c) => s + c[k], 0) / mons.length) : 0;
+  const parts = [["Monsters", mons.length], ["Magic", count(20)], ["Equip", count(23)], ["Trap", count(21)], ["Ritual", count(22)]]
+    .filter(([, n], i) => i === 0 || n > 0)
+    .map(([label, n]) => `<span><b>${n}</b> ${label}</span>`);
+  if (mons.length) parts.push(`<span>Avg ATK <b>${fmt(avg(2))}</b></span>`, `<span>Avg DEF <b>${fmt(avg(3))}</b></span>`);
+  const types = new Map();
+  mons.forEach(c => types.set(TYPES[c[4]], (types.get(TYPES[c[4]]) || 0) + 1));
+  const typeText = [...types].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t, n]) => `${t} ${n}`).join(" · ");
+  $("stats").innerHTML = `<div class="counts">${parts.join("")}</div>` + (typeText ? `<div class="types">${typeText}</div>` : "");
+}
+
+function buyText(c) {
+  if (c[6] >= 999999 || /^0+$/.test(c[7])) return "Can't be bought with a password.";
+  let s = `Password <b>${c[7]}</b> · costs <b>${fmt(c[6])}</b> starchips`;
+  if (st.save) {
+    const have = chipsGet();
+    s += have >= c[6] ? ` · <span class="yes">you can afford it</span>` : ` · <span class="no">${fmt(c[6] - have)} more needed</span>`;
+  }
+  return s;
 }
 
 function showCard(id) {
@@ -646,7 +741,7 @@ function showCard(id) {
     face.textContent = "Pick a card";
     $("d-name").textContent = "No card selected";
     $("d-meta").textContent = "Click a card in the trunk or deck to see it here.";
-    $("d-atk").textContent = ""; $("d-own").textContent = "0";
+    $("d-atk").textContent = ""; $("d-buy").innerHTML = ""; $("d-own").textContent = "0";
     return;
   }
   const t = c[4];
@@ -655,17 +750,14 @@ function showCard(id) {
   $("d-name").textContent = c[1];
   $("d-meta").textContent = `No. ${pad(c[0])}  ${TYPES[t]}${isMonster(c) && c[5] ? `  Level ${c[5]}` : ""}`;
   $("d-atk").textContent = isMonster(c) ? `ATK ${c[2]}  DEF ${c[3]}` : "";
+  $("d-buy").innerHTML = buyText(c); // only numbers and fixed text go in here
   $("d-own").textContent = st.save ? trunkGet(c[0]) : 0;
-  $("put").textContent = `Put in deck slot ${st.slot + 1}`;
 }
-
-function renderAll() { renderTrunk(); renderDeck(); showCard(st.cardId); $("put").textContent = `Put in deck slot ${st.slot + 1}`; }
 
 // --- actions ---
 function selectSlot(i) {
   st.slot = i;
   renderDeck();
-  $("put").textContent = `Put in deck slot ${i + 1}`;
   const id = st.deck[i];
   if (byId.has(id)) { st.cardId = id; renderTrunkSel(); showCard(id); }
 }
@@ -674,23 +766,96 @@ function renderTrunkSel() {
 }
 function putCard() {
   if (!st.save || !st.cardId) { status("Pick a card in the trunk first.", "err"); return; }
-  const c = byId.get(st.cardId);
-  st.deck[st.slot] = st.cardId;
-  deckWrite();
-  markDirty();
-  status(`${c[1]} is now in slot ${st.slot + 1}.`);
-  st.slot = Math.min(39, st.slot + 1);
+  const c = byId.get(st.cardId), slot = st.slot;
+  edit(() => { st.deck[slot] = st.cardId; deckWrite(); }, `${c[1]} is now in slot ${slot + 1}.`);
+  st.slot = Math.min(39, slot + 1);
   renderDeck();
-  $("put").textContent = `Put in deck slot ${st.slot + 1}`;
   const sel = $("deck").querySelector(".row.sel"); if (sel) sel.scrollIntoView({ block: "nearest" });
 }
 function changeTrunk(d) {
   if (!st.save || !st.cardId) return;
-  trunkSet(st.cardId, trunkGet(st.cardId) + d);
-  $("d-own").textContent = trunkGet(st.cardId);
-  const row = $("trunk").querySelector(`.row[data-id="${st.cardId}"] .own`);
-  if (row) { const n = trunkGet(st.cardId); row.innerHTML = `&times;${n}`; row.classList.toggle("zero", !n); }
-  markDirty();
+  const id = st.cardId, c = byId.get(id);
+  edit(() => trunkSet(id, trunkGet(id) + d), `${c[1]}: ${Math.max(0, Math.min(99, trunkGet(id) + d))} in trunk.`);
+}
+
+async function bulk() {
+  if (!st.save) return;
+  const choice = await modal("Bulk actions", "<p>Every change here can be undone.</p>", [
+    { label: "1 of every card", value: 1, gold: true },
+    { label: "3 of every card", value: 3, gold: true },
+    { label: "Cancel", value: null },
+  ]);
+  if (!choice) return;
+  edit(() => { for (const c of CARDS) if (trunkGet(c[0]) < choice) trunkSet(c[0], choice); },
+       `You now have at least ${choice} of every card in your trunk.`);
+}
+
+// --- deck import / export ---
+const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const byName = new Map(CARDS.map(c => [norm(c[1]), c[0]]));
+
+function parseDeck(text) {
+  const ids = [], bad = [];
+  for (const raw of text.split(/\r?\n/)) {
+    let line = raw.trim();
+    if (!line || line.startsWith("#") || line.startsWith("//")) continue;
+    let n = 1, m;
+    // "3x Mystical Elf" or "Mystical Elf x3"
+    if ((m = line.match(/^(\d{1,2})\s*[x×]\s+(.+)$/i))) { n = +m[1]; line = m[2]; }
+    else if ((m = line.match(/^(.+?)\s+[x×]\s*(\d{1,2})$/i))) { line = m[1]; n = +m[2]; }
+    // full name first (some names start with numbers), then "001 Name" / "#1"
+    let id = byName.get(norm(line));
+    if (!id && (m = line.match(/^#?(\d{1,3})(?:\b|$)/)) && byId.has(+m[1])) id = +m[1];
+    if (!id) { bad.push(raw.trim()); continue; }
+    for (let k = 0; k < Math.min(n, 40); k++) ids.push(id);
+  }
+  return { ids, bad };
+}
+
+async function importDeck() {
+  if (!st.save) return;
+  const p = modal("Import deck",
+    `<p>Paste a deck below, one card per line, as a card number or a name. "3x Mystical Elf" adds three copies.</p>
+     <textarea id="io" spellcheck="false" placeholder="001 Blue-eyes White Dragon&#10;3x Mystical Elf"></textarea>
+     <p class="msg" id="io-msg"></p>`,
+    [{ label: "Import", value: "ok", gold: true, onClick: () => {
+        const { ids, bad } = parseDeck($("io").value);
+        const msg = $("io-msg");
+        if (bad.length) { msg.textContent = `Couldn't find: ${bad.slice(0, 4).join(", ")}${bad.length > 4 ? ` and ${bad.length - 4} more` : ""}. Fix or remove ${bad.length > 1 ? "those lines" : "that line"}.`; return false; }
+        if (!ids.length) { msg.textContent = "No cards found. Paste one card per line."; return false; }
+        if (ids.length > 40) { msg.textContent = `That's ${ids.length} cards. A deck holds 40.`; return false; }
+        st.pendingImport = ids;
+      } },
+     { label: "Cancel", value: null }]);
+  $("io").focus();
+  if ((await p) !== "ok") return;
+  const ids = st.pendingImport; st.pendingImport = null;
+  edit(() => { st.deck = Array.from({ length: 40 }, (_, i) => ids[i] || 0); deckWrite(); },
+       ids.length === 40 ? "Deck imported." : `Imported ${ids.length} cards. ${40 - ids.length} slots are still empty.`);
+  st.slot = Math.min(ids.length, 39); renderDeck();
+}
+
+function deckAsText() {
+  const filled = st.deck.filter(id => byId.has(id));
+  return `# Forbidden Memories deck (${filled.length}/40)\n` + filled.map(id => `${pad(id)} ${byId.get(id)[1]}`).join("\n");
+}
+function copyFrom(ta) {
+  ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch { ok = false; }
+  if (!ok && navigator.clipboard) navigator.clipboard.writeText(ta.value).catch(() => {});
+  return ok;
+}
+async function exportDeck() {
+  if (!st.save) return;
+  const p = modal("Export deck",
+    `<p>Copy this to keep your deck or share it. Paste it into Import to load it again.</p>
+     <textarea id="io" readonly spellcheck="false"></textarea>`,
+    [{ label: "Copy", gold: true, onClick: el => { el.textContent = copyFrom($("io")) ? "Copied!" : "Press Ctrl+C"; return false; } },
+     { label: "Close", value: null }]);
+  $("io").value = deckAsText();
+  $("io").select();
+  await p;
 }
 
 function deckProblems() {
@@ -705,14 +870,26 @@ function deckProblems() {
   return out;
 }
 
-function ask(title, html) {
+// popup. buttons: [{label, value, gold, onClick}] - onClick returning false keeps it open
+function modal(title, html, buttons) {
   return new Promise(res => {
-    $("dlg-title").textContent = title; $("dlg-body").innerHTML = html;
-    const back = $("dlg-back"); back.classList.add("on"); $("dlg-no").focus();
-    const done = v => { back.classList.remove("on"); $("dlg-yes").onclick = $("dlg-no").onclick = null; res(v); };
-    $("dlg-yes").onclick = () => done(true); $("dlg-no").onclick = () => done(false);
+    const back = $("dlg-back"), box = $("dlg-btns");
+    $("dlg-title").textContent = title; $("dlg-body").innerHTML = html; box.innerHTML = "";
+    const done = v => { back.classList.remove("on"); document.removeEventListener("keydown", onKey); res(v); };
+    const onKey = e => { if (e.key === "Escape") done(null); };
+    for (const b of buttons) {
+      const el = document.createElement("button");
+      el.className = "btn" + (b.gold ? " gold" : "");
+      el.textContent = b.label;
+      el.onclick = () => { if (b.onClick && b.onClick(el) === false) return; done(b.value ?? null); };
+      box.append(el);
+    }
+    back.classList.add("on");
+    document.addEventListener("keydown", onKey);
+    box.lastChild.focus();
   });
 }
+const ask = (title, html) => modal(title, html, [{ label: "Yes", value: true, gold: true }, { label: "No", value: false }]).then(v => v === true);
 
 async function saveAll() {
   if (!st.save) return;
@@ -744,7 +921,8 @@ async function saveAll() {
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
       savedAs = `Saved as ${name}. Check your downloads folder, then swap it into your emulator.`;
     }
-    st.dirty = false;
+    st.base = st.save.slice();
+    $("reset").disabled = true;
     status(savedAs, "good");
   } catch (e) {
     status(e && e.code === "declined" ? "Save cancelled. Your changes are still here." : "The download couldn't start. Try again.", "err");
@@ -754,7 +932,7 @@ async function saveAll() {
 // --- events ---
 $("pick").onclick = () => $("file").click();
 $("other").onclick = async () => {
-  if (st.dirty && !(await ask("Leave?", "<p>You have unsaved changes. Open another file anyway?</p>"))) return;
+  if (isDirty() && !(await ask("Leave?", "<p>You have unsaved changes. Open another file anyway?</p>"))) return;
   $("file").value = ""; $("file").click();
 };
 $("file").onchange = e => { const f = e.target.files[0]; if (f) loadFile(f); };
@@ -765,7 +943,7 @@ drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) l
 
 $("saves").onchange = async e => {
   const i = +e.target.value;
-  if (st.dirty && !(await ask("Switch save?", "<p>You have unsaved changes to this save. Switch anyway?</p>"))) { e.target.value = st.saveIdx; return; }
+  if (isDirty() && !(await ask("Switch save?", "<p>You have unsaved changes to this save. Switch anyway?</p>"))) { e.target.value = st.saveIdx; return; }
   openSave(i);
 };
 $("trunk").onclick = e => {
@@ -780,21 +958,30 @@ $("minus").onclick = () => changeTrunk(-1);
 $("search").oninput = renderTrunk;
 $("sort").onchange = renderTrunk;
 $("owned").onchange = renderTrunk;
-$("sort-deck").onclick = () => { if (!st.save) return; st.deck.sort((a, b) => (a || 9999) - (b || 9999)); deckWrite(); markDirty(); renderDeck(); };
+$("bulk").onclick = bulk;
+$("sort-deck").onclick = () => edit(() => { st.deck.sort((a, b) => (a || 9999) - (b || 9999)); deckWrite(); }, "Deck sorted by card number.");
+$("import").onclick = importDeck;
+$("export").onclick = exportDeck;
 $("chips").onchange = () => {
   if (!st.save) return;
   const raw = $("chips").value.trim(), n = Number(raw);
   // empty/invalid input = put the old value back (don't zero it)
   if (raw === "" || !Number.isFinite(n)) { $("chips").value = chipsGet(); return; }
-  const before = chipsGet();
-  chipsSet(Math.floor(n));
+  edit(() => chipsSet(Math.floor(n)), `Starchips set to ${fmt(Math.max(0, Math.min(999999, Math.floor(n))))}.`);
   $("chips").value = chipsGet();
-  if (chipsGet() !== before) markDirty();
 };
+$("chips-max").onclick = () => edit(() => chipsSet(999999), "Starchips set to 999,999.");
+$("undo").onclick = undo;
+$("reset").onclick = reset;
 $("save").onclick = saveAll;
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("dlg-back").classList.contains("on")) $("dlg-no").click(); });
+document.addEventListener("keydown", e => {
+  // ctrl+z = undo, unless you're typing in a box
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !e.target.closest("input, textarea") && !$("dlg-back").classList.contains("on")) {
+    e.preventDefault(); undo();
+  }
+});
 // unsaved changes warning
-window.addEventListener("beforeunload", e => { if (st.dirty) { e.preventDefault(); e.returnValue = ""; } });
+window.addEventListener("beforeunload", e => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
 setEditable(false);
 </script>
 </body>
