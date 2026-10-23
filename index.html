@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nPFov33XWSTQmTwWpg+J9L8TxGp/PHiZF8vJMbYfBp4='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VER1lIHRjLPsHz4JoVVs6fSk9/ihtk/EaxNrxqbRVI4='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forbidden Memories Save Editor</title>
@@ -352,7 +352,7 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
       <span>shualyons</span>
     </a>
     <h1>Forbidden Memories</h1>
-    <p>Save editor for the PlayStation game (US version)</p>
+    <p>Save editor for the PlayStation game (US and European versions)</p>
   </header>
 
   <section id="insert" class="win" aria-labelledby="insert-title">
@@ -655,10 +655,10 @@ function openSave(i) {
   const ver = versionOf(s.name);
   let ok = data.length >= COPY_B + BLK && verifyBlock(data, COPY_A);
   if (!ok && data.length >= COPY_B + BLK && verifyBlock(data, COPY_B)) { data.copyWithin(COPY_A, COPY_B, COPY_B + BLK); ok = true; }
-  // US only for now (EU untested)
+  // US + EU, both tested in-game. the integrity check still has to pass before anything can be edited
   if (!ver) {
     setEditable(false);
-    status("This isn't a US Forbidden Memories save. Only the US version is supported for now.", "err");
+    status("This isn't a Forbidden Memories save from a version this editor knows (US or European).", "err");
     return;
   }
   if (!ok) {
@@ -675,7 +675,7 @@ function openSave(i) {
 }
 
 // serials from the save file name
-const VERSIONS = { "01411": "US" };
+const VERSIONS = { "01411": "US", "03947": "European", "03948": "European", "03949": "European", "03950": "European", "03951": "European" };
 function versionOf(name) {
   for (const [serial, label] of Object.entries(VERSIONS)) if (name.includes(serial)) return label;
   return null;
