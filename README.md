@@ -89,7 +89,6 @@ Three regions of the block are sealed with a CRC-16 and a run of pseudo-random w
 
 - Save format and integrity check: [ygofm-decomp](https://github.com/MaChInEgUn3/ygofm-decomp), a decompilation of the game.
 - Card names and stats: [YGO-FM-FusionCalc](https://github.com/Solumin/YGO-FM-FusionCalc).
-- Fonts: [Cinzel](https://github.com/NDISCOVER/Cinzel) and [Spectral](https://github.com/productiontype/Spectral), both under the SIL Open Font License 1.1.
 
 ## Disclaimer
 
