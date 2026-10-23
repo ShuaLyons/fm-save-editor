@@ -101,4 +101,4 @@ The editor's code is released under the [MIT License](LICENSE). The license cove
 
 ## AI disclosure
 
-This project was built with AI assistance. Most of the code was written by Claude (Anthropic) under my direction. I decided what to build, pointed it to the research it used, chose the design, and tested the editor on real saves in DuckStation before releasing it.
+This project was built with AI assistance. I decided what to build, pointed it to the research it used, chose the design, and tested the editor on real saves in DuckStation before releasing it.
