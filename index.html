@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VER1lIHRjLPsHz4JoVVs6fSk9/ihtk/EaxNrxqbRVI4='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sK1LkBvQNhGJxzi8xPtPd7Yj24UOZ02sBOOIJnFDddY='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forbidden Memories Save Editor</title>
@@ -352,7 +352,7 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
       <span>shualyons</span>
     </a>
     <h1>Forbidden Memories</h1>
-    <p>Save editor for the PlayStation game (US and European versions)</p>
+    <p>Save editor for the PlayStation game (US, European and Japanese versions)</p>
   </header>
 
   <section id="insert" class="win" aria-labelledby="insert-title">
@@ -658,7 +658,7 @@ function openSave(i) {
   // US + EU, both tested in-game. the integrity check still has to pass before anything can be edited
   if (!ver) {
     setEditable(false);
-    status("This isn't a Forbidden Memories save from a version this editor knows (US or European).", "err");
+    status("This isn't a Forbidden Memories save from a version this editor knows (US, European or Japanese).", "err");
     return;
   }
   if (!ok) {
@@ -671,11 +671,15 @@ function openSave(i) {
   st.slot = 0;
   setEditable(true);
   refresh();
-  status(`Loaded ${ver}. Check the deck matches your game, then pick a slot and a card.`, "good");
+  status(ver === "Japanese"
+    ? "Loaded Japanese. Card names are shown in English, so check the deck matches your game, then pick a slot and a card."
+    : `Loaded ${ver}. Check the deck matches your game, then pick a slot and a card.`, "good");
 }
 
 // serials from the save file name
-const VERSIONS = { "01411": "US", "03947": "European", "03948": "European", "03949": "European", "03950": "European", "03951": "European" };
+const VERSIONS = { "01411": "US", "03947": "European", "03948": "European", "03949": "European", "03950": "European", "03951": "European",
+  // japanese release (Shin Duel Monsters): normal, limited edition, Konami the Best
+  "86398": "Japanese", "86396": "Japanese", "86573": "Japanese" };
 function versionOf(name) {
   for (const [serial, label] of Object.entries(VERSIONS)) if (name.includes(serial)) return label;
   return null;

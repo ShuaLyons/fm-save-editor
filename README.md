@@ -1,6 +1,6 @@
 # Forbidden Memories Save Editor
 
-A save editor for **Yu-Gi-Oh! Forbidden Memories** (PlayStation, US and European versions) that runs entirely in your web browser. Change your deck, the cards in your trunk, and your starchips, then load the edited save in your emulator.
+A save editor for **Yu-Gi-Oh! Forbidden Memories** (PlayStation, US, European and Japanese versions) that runs entirely in your web browser. Change your deck, the cards in your trunk, and your starchips, then load the edited save in your emulator.
 
 **Use it here:** https://shualyons.github.io/fm-save-editor/
 
@@ -69,6 +69,7 @@ Even so, always keep a backup of your original memory card file.
 ## Limitations
 
 - **Supported versions:** US (SLUS-01411) and European (SLES-03947 to SLES-03951). Tested in DuckStation with the US disc and the European SLES-03947 and SLES-03948 discs; the other European discs should work the same way. Each European disc only sees saves made with its own disc.
+- **Japanese version:** Yu-Gi-Oh! Shin Duel Monsters (SLPM-86396, SLPM-86398 and SLPM-86573). Tested in DuckStation with SLPM-86398. Card names are shown in English, but the card numbers match the game.
 - Card names are shown in English.
 - The editor doesn't change Library progress, campaign progress or duelist records.
 
