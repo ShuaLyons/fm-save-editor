@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sK1LkBvQNhGJxzi8xPtPd7Yj24UOZ02sBOOIJnFDddY='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oT0EL/tiQRzkkT9Nnuk/8lj8q7B6rxHbaY3+RJ1/ahU='; style-src 'unsafe-inline'; font-src data:; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forbidden Memories Save Editor</title>
@@ -289,6 +289,8 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
   background: linear-gradient(160deg, #d9ae55, #9c6f24);
 }
 .cardface.t-magic { background: linear-gradient(160deg, #3fae8d, #1d6b55); color: #f2fff8; }
+.cardface.has-art { padding: 0; background: #000; overflow: hidden; }
+.cardface.has-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cardface.t-trap { background: linear-gradient(160deg, #c2508a, #7a2350); color: #fff0f8; }
 .cardface.t-ritual { background: linear-gradient(160deg, #5b6fe0, #2c3a94); color: #f4f6ff; }
 .cardface.t-equip { background: linear-gradient(160deg, #46a0cf, #215f86); color: #f0faff; }
@@ -771,11 +773,37 @@ function showCard(id) {
   const t = c[4];
   if (t === 20) face.classList.add("t-magic"); else if (t === 21) face.classList.add("t-trap"); else if (t === 22) face.classList.add("t-ritual"); else if (t === 23) face.classList.add("t-equip");
   face.innerHTML = `<div>No.${pad(c[0])}<br><br>${esc(TYPES[t])}<br><br><span class="lv">${isMonster(c) && c[5] ? "&#9733;".repeat(Math.min(c[5], 12)) : ""}</span></div>`;
+  loadArt(face, c[0]);
   $("d-name").textContent = c[1];
   $("d-meta").textContent = `No. ${pad(c[0])}  ${TYPES[t]}${isMonster(c) && c[5] ? `  Level ${c[5]}` : ""}`;
   $("d-atk").textContent = isMonster(c) ? `ATK ${c[2]}  DEF ${c[3]}` : "";
   $("d-buy").innerHTML = buyText(c); // only numbers and fixed text go in here
   $("d-own").textContent = st.save ? trunkGet(c[0]) : 0;
+}
+
+// custom card art: drop images into an art/ folder next to index.html, named by card number
+// (art/001.png, art/035.jpg ...). cards without an image keep the placeholder
+const ART_TYPES = ["png", "jpg", "webp"];
+const artCache = new Map(); // id -> url, or null if there's no image
+function loadArt(face, id) {
+  face.dataset.card = id;
+  const show = url => {
+    if (face.dataset.card !== String(id)) return; // a different card was picked meanwhile
+    const img = new Image();
+    img.src = url; img.alt = "";
+    face.classList.add("has-art");
+    face.replaceChildren(img);
+  };
+  if (artCache.has(id)) { const url = artCache.get(id); if (url) show(url); return; }
+  const tryNext = i => {
+    if (i >= ART_TYPES.length) { artCache.set(id, null); return; }
+    const url = `art/${pad(id)}.${ART_TYPES[i]}`;
+    const probe = new Image();
+    probe.onload = () => { artCache.set(id, url); show(url); };
+    probe.onerror = () => tryNext(i + 1);
+    probe.src = url;
+  };
+  tryNext(0);
 }
 
 // --- actions ---
