@@ -50,10 +50,10 @@ Most raw 128 KB PS1 memory card images should work.
 
 ## Use it offline
 
-The editor is two files (`index.html` and `style.css`), so it works without an internet connection:
+The editor is three files (`index.html`, `style.css` and `app.js`), so it works without an internet connection:
 
 1. On this repository's main page, click the green **Code** button, then **Download ZIP**.
-2. Unzip it somewhere easy to find, such as your desktop. Keep `index.html` and `style.css` together in the same folder.
+2. Unzip it somewhere easy to find, such as your desktop. Keep `index.html`, `style.css` and `app.js` together in the same folder.
 3. Double-click `index.html` to open it in your browser. Everything works the same as the website: opening, editing and saving.
 
 The fonts are built into `style.css`, so it looks the same offline too. Download the ZIP again whenever there's an update.
