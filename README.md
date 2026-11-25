@@ -1,6 +1,6 @@
-# Forbidden Memories Save Editor
+# Yu-Gi-Oh! Forbidden Memories Save Editor
 
-A save editor for **Yu-Gi-Oh! Forbidden Memories** (PlayStation, US, European and Japanese versions) that runs entirely in your web browser. Change your deck, the cards in your trunk, and your starchips, then load the edited save in your emulator.
+A free, open-source save editor for **Yu-Gi-Oh! Forbidden Memories** (PS1 / PlayStation, US, European and Japanese versions) that runs entirely in your web browser. Change your deck, the cards in your trunk, and your starchips, then load the edited save in your emulator.
 
 **Use it here:** https://shualyons.github.io/fm-save-editor/
 

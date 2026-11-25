@@ -5,7 +5,44 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oT0EL/tiQRzkkT9Nnuk/8lj8q7B6rxHbaY3+RJ1/ahU='; style-src 'unsafe-inline'; font-src data:; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Forbidden Memories Save Editor</title>
+<title>Yu-Gi-Oh! Forbidden Memories Save Editor: Edit Deck, Cards &amp; Starchips</title>
+<meta name="description" content="Free online save editor for Yu-Gi-Oh! Forbidden Memories (PS1, US, EU &amp; JP). Edit your deck, trunk cards and starchips in your browser, then load the save in DuckStation, ePSXe or RetroArch. Nothing is uploaded.">
+<link rel="canonical" href="https://shualyons.github.io/fm-save-editor/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="shualyons">
+<meta name="theme-color" content="#b08a3e">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Forbidden Memories Save Editor">
+<meta property="og:title" content="Yu-Gi-Oh! Forbidden Memories Save Editor">
+<meta property="og:description" content="Edit your deck, trunk cards and starchips in your browser, then load the save in your PS1 emulator. Free, and nothing is uploaded.">
+<meta property="og:url" content="https://shualyons.github.io/fm-save-editor/">
+<meta property="og:image" content="https://shualyons.github.io/fm-save-editor/screenshots/social.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="628">
+<meta property="og:image:alt" content="The save editor with a Forbidden Memories save loaded: trunk cards on the left, deck on the right">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Yu-Gi-Oh! Forbidden Memories Save Editor">
+<meta name="twitter:description" content="Edit your deck, trunk cards and starchips in your browser. Free, and nothing is uploaded.">
+<meta name="twitter:image" content="https://shualyons.github.io/fm-save-editor/screenshots/social.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Yu-Gi-Oh! Forbidden Memories Save Editor",
+  "url": "https://shualyons.github.io/fm-save-editor/",
+  "description": "Browser-based save editor for Yu-Gi-Oh! Forbidden Memories on PlayStation (US, European and Japanese versions). Edit your deck, trunk cards and starchips. Your save never leaves your computer.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any (web browser)",
+  "browserRequirements": "Requires JavaScript",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "screenshot": "https://shualyons.github.io/fm-save-editor/screenshots/editor.jpg",
+  "featureList": ["Edit all 40 deck slots with any of the 722 cards", "Set how many copies of each card are in your trunk", "Set or max out starchips", "Import and export decks as text", "Recalculates the save checksum so edited saves load in-game"],
+  "author": { "@type": "Person", "name": "shualyons", "url": "https://github.com/shualyons" },
+  "license": "https://github.com/shualyons/fm-save-editor/blob/main/LICENSE"
+}
+</script>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"%3E%3Cdefs%3E%3ClinearGradient id="s" x1="0" y1="0" x2="0" y2="1"%3E%3Cstop offset="0" stop-color="%23d4a650"/%3E%3Cstop offset="1" stop-color="%238f6a28"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="32" height="32" rx="6" fill="%2326221e"/%3E%3Crect x="5.5" y="2.5" width="21" height="27" rx="2.5" fill="url%28%23s%29" stroke="%23f0d27a" stroke-width="2.4"/%3E%3Cg fill="none" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M8.6 16.6c4.2-6 10.6-6 14.8 0c-4.2 6-10.6 6-14.8 0z" stroke="%23fff3c4" stroke-opacity=".55" stroke-width="2.2"/%3E%3Cpath d="M8.2 16c4.2-6 10.6-6 14.8 0c-4.2 6-10.6 6-14.8 0z" stroke="%233a2306" stroke-width="2.2"/%3E%3C/g%3E%3Ccircle cx="16.4" cy="16.6" r="3.2" fill="%23fff3c4" fill-opacity=".5"/%3E%3Ccircle cx="15.6" cy="16" r="3.2" fill="%233a2306"/%3E%3C/svg%3E'>
 <style>
 
@@ -325,6 +362,15 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
 .how { margin-top: 18px; color: #ece6d8; font-size: 17px; text-shadow: var(--outline); }
 .how b { color: var(--gold); font-weight: 600; }
 
+.about { max-width: 720px; margin: 32px auto 0; color: #ece6d8; font-size: 17px; text-shadow: var(--outline); }
+#editor.on ~ .about { display: none; }
+.about h2 { margin: 24px 0 8px; font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: 1px; color: var(--gold); }
+.about p, .about ol, .about ul { margin: 0 0 10px; }
+.about li { margin-bottom: 4px; }
+.about details { margin-bottom: 8px; }
+.about summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.about details p { margin: 6px 0 0 18px; }
+
 .credits {
   margin-top: 28px;
   padding-top: 10px;
@@ -444,6 +490,45 @@ textarea:focus-visible { outline: 2px solid var(--frame); }
     </div>
 
     <p class="how"><b>After saving:</b> close your emulator and put the saved memory card file in place of your old one (if it downloaded as a zip, unzip it first). Keep your old file somewhere safe as a backup.</p>
+  </section>
+
+  <section class="about" aria-labelledby="about-title">
+    <h2 id="about-title">Edit your Yu-Gi-Oh! Forbidden Memories save</h2>
+    <p>This free save editor for Yu-Gi-Oh! Forbidden Memories on the PlayStation (PS1) lets you change your deck, the cards in your trunk and your starchips, right in your browser. It works with the US, European and Japanese (Shin Duel Monsters) versions of the game.</p>
+    <ul>
+      <li>Put any of the game's 722 cards into any of your 40 deck slots.</li>
+      <li>Set how many copies of each card you own, or get 1 or 3 of every card at once.</li>
+      <li>Set your starchips, or max them out with one click.</li>
+      <li>See ATK/DEF, type, level, password and starchip cost for every card.</li>
+      <li>Import and export decks as text.</li>
+    </ul>
+
+    <h2>How to use it</h2>
+    <ol>
+      <li>Close your emulator so it isn't using the memory card file.</li>
+      <li>Click <b>Choose file</b> and pick your memory card file.</li>
+      <li>Edit your deck, trunk and starchips, then click <b>Save changes</b>.</li>
+      <li>Replace your old memory card file with the downloaded one, keeping a backup of the old one.</li>
+      <li>Start the game and use its <b>Load</b> option, not an emulator save state.</li>
+    </ol>
+
+    <h2>Questions</h2>
+    <details>
+      <summary>Which emulators and memory card files work?</summary>
+      <p>DuckStation (.mcd), ePSXe and Mednafen (.mcr), RetroArch (.srm) and DexDrive (.gme). Most raw 128 KB PS1 memory card images work.</p>
+    </details>
+    <details>
+      <summary>Is my save uploaded anywhere?</summary>
+      <p>No. Everything happens in your browser and your file never leaves your computer. You can also download the page and use it offline.</p>
+    </details>
+    <details>
+      <summary>Will the game accept the edited save?</summary>
+      <p>Yes. Forbidden Memories checks its save data with a checksum. The editor recalculates it exactly as the game does, so edited saves load normally.</p>
+    </details>
+    <details>
+      <summary>Which versions of the game are supported?</summary>
+      <p>US (SLUS-01411), European (SLES-03947 to SLES-03951) and Japanese Yu-Gi-Oh! Shin Duel Monsters (SLPM-86396, SLPM-86398 and SLPM-86573).</p>
+    </details>
   </section>
 
   <footer class="credits">
