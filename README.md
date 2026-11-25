@@ -50,13 +50,13 @@ Most raw 128 KB PS1 memory card images should work.
 
 ## Use it offline
 
-The whole editor is a single file, so it works without an internet connection:
+The editor is two files (`index.html` and `style.css`), so it works without an internet connection:
 
-1. In this repository, click **index.html**, then the **Download raw file** button (the downward arrow near the top right of the file view).
-2. Save it somewhere easy to find, such as your desktop. You can rename it, for example to `fm-save-editor.html`.
-3. Double-click it to open it in your browser. Everything works the same as the website: opening, editing and saving.
+1. On this repository's main page, click the green **Code** button, then **Download ZIP**.
+2. Unzip it somewhere easy to find, such as your desktop. Keep `index.html` and `style.css` together in the same folder.
+3. Double-click `index.html` to open it in your browser. Everything works the same as the website: opening, editing and saving.
 
-The fonts are built into the file, so it looks the same offline too. Download the file again whenever there's an update.
+The fonts are built into `style.css`, so it looks the same offline too. Download the ZIP again whenever there's an update.
 
 ## Is it safe?
 
