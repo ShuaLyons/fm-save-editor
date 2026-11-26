@@ -319,8 +319,8 @@ function showCard(id) {
 }
 
 // custom card art: drop images into an art/ folder next to index.html, named by card number
-// (art/001.png, art/035.jpg ...). cards without an image keep the placeholder
-const ART_TYPES = ["png", "jpg", "webp"];
+// (art/001.webp, art/035.png ...). webp is tried first. cards without an image keep the placeholder
+const ART_TYPES = ["webp", "png", "jpg"];
 const artCache = new Map(); // id -> url, or null if there's no image
 function loadArt(face, id) {
   face.dataset.card = id;
